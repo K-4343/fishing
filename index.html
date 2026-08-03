@@ -1,0 +1,3166 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>한국 해안 루어낚시 가이드</title>
+<!-- PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="동해안 낚시">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d47a1">
+<meta name="description" content="포항·영덕·울진 루어낚시 포인트, 전국 해안 실시간 날씨·해양 정보">
+<link id="pwa-manifest" rel="manifest">
+<link id="pwa-apple-icon" rel="apple-touch-icon">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{
+  --pohang:#1a73e8;--yeongdeok:#0f9d58;--uljin:#f4511e;--rest:#9c27b0;
+  --bg:#f8f9fa;--card:#fff;--text:#202124;--sub:#5f6368;--border:#e8eaed;--star:#fbbc04;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,sans-serif;
+     background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;}
+
+.hero{background:linear-gradient(135deg,#0d47a1,#0277bd);color:#fff;padding:18px 16px 14px;text-align:center;}
+.hero h1{font-size:18px;font-weight:700;}
+.hero p{font-size:11px;margin-top:3px;opacity:.85;}
+.meta-row{display:flex;justify-content:center;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.meta-chip{background:rgba(255,255,255,.18);border-radius:20px;padding:3px 10px;font-size:11px;}
+
+.tab-bar{display:flex;background:#fff;border-bottom:2px solid var(--border);
+         position:sticky;top:0;z-index:900;box-shadow:0 1px 3px rgba(0,0,0,.07);}
+.tab{flex:1;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;
+     color:var(--sub);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.tab.active{color:var(--pohang);border-bottom-color:var(--pohang);}
+
+#map-view,#fish-view{display:none;}
+#map-view{display:block;}
+#map{width:100%;height:calc(100vh - 126px);min-height:380px;}
+
+/* 지도 필터 */
+.map-controls{display:flex;gap:6px;padding:7px 12px;background:#fff;
+              border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;}
+.ctrl-label{font-size:11px;font-weight:700;color:var(--sub);white-space:nowrap;}
+
+/* 공통 버튼 */
+.fbtn{padding:4px 11px;border-radius:14px;border:2px solid;font-size:11px;
+      font-weight:700;cursor:pointer;background:#fff;transition:.15s;white-space:nowrap;}
+.fbtn.all{border-color:#888;color:#555;}.fbtn.all.on{background:#555;color:#fff;}
+.fbtn.pohang{border-color:var(--pohang);color:var(--pohang);}
+.fbtn.pohang.on{background:var(--pohang);color:#fff;}
+.fbtn.yeongdeok{border-color:var(--yeongdeok);color:var(--yeongdeok);}
+.fbtn.yeongdeok.on{background:var(--yeongdeok);color:#fff;}
+.fbtn.uljin{border-color:var(--uljin);color:var(--uljin);}
+.fbtn.uljin.on{background:var(--uljin);color:#fff;}
+.fbtn.rest{border-color:var(--rest);color:var(--rest);}
+.fbtn.rest.on{background:var(--rest);color:#fff;}
+.fbtn.fishonly{border-color:#00796b;color:#00796b;}
+.fbtn.fishonly.on{background:#00796b;color:#fff;}
+.fbtn.wxbtn{border-color:#0d47a1;color:#0d47a1;}
+.fbtn.wxbtn.on{background:#0d47a1;color:#fff;}
+.fbtn.marinebtn{border-color:#00695c;color:#00695c;}
+.fbtn.marinebtn.on{background:#00695c;color:#fff;}
+.ctrl-sep{color:#ccc;margin:0 3px;font-size:16px;line-height:1;}
+
+
+/* Leaflet 팝업 */
+.leaflet-popup-content-wrapper{border-radius:12px!important;padding:0!important;
+  overflow:hidden;min-width:250px;box-shadow:0 4px 16px rgba(0,0,0,.18)!important;}
+.leaflet-popup-content{margin:0!important;width:auto!important;}
+.popup-header{padding:10px 14px 8px;color:#fff;font-weight:700;font-size:14px;
+              display:flex;justify-content:space-between;align-items:center;}
+.popup-badge{background:rgba(255,255,255,.25);border-radius:8px;padding:2px 7px;font-size:10px;}
+.popup-body{padding:6px 14px 10px;}
+.popup-row{display:flex;gap:6px;margin-bottom:5px;align-items:flex-start;}
+.popup-label{font-size:10px;font-weight:700;color:#fff;border-radius:3px;
+             padding:1px 5px;white-space:nowrap;flex-shrink:0;margin-top:1px;background:#888;}
+.popup-val{font-size:12px;line-height:1.5;}
+.ptags{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0;}
+.ptag{border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600;}
+.popup-tip{background:#fffde7;border-radius:6px;padding:6px 10px;font-size:11px;color:#5f4b00;margin-top:5px;}
+.popup-tip::before{content:"💡 ";}
+.popup-rest-box{background:#f3e5f5;border-radius:6px;padding:6px 10px;font-size:11px;color:#4a148c;margin-top:5px;}
+.popup-actions{display:flex;gap:6px;padding:0 14px 12px;flex-wrap:wrap;}
+.btn-nv,.btn-kk,.btn-tel,.btn-go,.btn-rgo{padding:6px 11px;border-radius:8px;font-size:11px;
+  font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:3px;border:none;cursor:pointer;}
+.btn-nv{background:#03c75a;color:#fff;}
+.btn-kk{background:#fee500;color:#3c1e1e;}
+.btn-tel{background:#f5f5f5;color:#333;border:1px solid #ddd;}
+.btn-go{background:#e8f0fe;color:#1a73e8;}
+.btn-rgo{background:#f3e5f5;color:#7b1fa2;}
+
+/* 공통 카드 */
+.section-wrap{padding:10px 12px 14px;}
+.region-hd{display:flex;align-items:center;gap:10px;padding:12px 0 8px;}
+.region-badge{color:#fff;border-radius:16px;padding:4px 14px;font-size:12px;font-weight:700;}
+.region-hd h2{font-size:15px;font-weight:700;}
+.area-label{font-size:11px;font-weight:700;padding:4px 2px 6px;}
+
+.card-list{display:flex;flex-direction:column;gap:10px;margin-bottom:10px;}
+.card{background:var(--card);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.09);overflow:hidden;}
+.fish-card{border-left:4px solid var(--pohang);}
+.fish-card.goseong{border-left-color:#00838f;}
+.fish-card.sokcho{border-left-color:#2e7d32;}
+.fish-card.gangneung{border-left-color:#01579b;}
+.fish-card.samcheok{border-left-color:#4527a0;}
+.fish-card.pohang{border-left-color:#1a73e8;}
+.fish-card.yeongdeok{border-left-color:#0f9d58;}
+.fish-card.uljin{border-left-color:#f4511e;}
+.fish-card.incheon{border-left-color:#0097a7;}
+.fish-card.dangjin{border-left-color:#006064;}
+.fish-card.hongseong{border-left-color:#00acc1;}
+.fish-card.taean{border-left-color:#0288d1;}
+.fish-card.buan{border-left-color:#1565c0;}
+.fish-card.gunsan{border-left-color:#37474f;}
+.fish-card.busan{border-left-color:#880e4f;}
+.fish-card.yeosu{border-left-color:#6a1b9a;}
+.fish-card.tongyeong{border-left-color:#c2185b;}
+.fish-card.wando{border-left-color:#4a148c;}
+.fish-card.geoje{border-left-color:#d81b60;}
+.fish-card.haenam{border-left-color:#b71c1c;}
+.fish-card.jeju{border-left-color:#f57c00;}
+.rest-card{border-left:4px solid var(--rest);}
+
+/* 물때 전략 섹션 */
+.tide-section{background:#fff;border-radius:14px;padding:16px 14px;margin:10px 0;
+              border:1px solid #e0e0e0;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.tide-title{font-size:14px;font-weight:700;color:#0d47a1;margin-bottom:12px;
+            padding-bottom:8px;border-bottom:2px solid #e3f2fd;}
+.tide-sub{font-size:12px;font-weight:700;color:#37474f;margin:10px 0 6px;
+          padding-left:8px;border-left:3px solid #0097a7;}
+.tide-table-wrap{overflow-x:auto;margin-bottom:8px;}
+.tide-table{width:100%;border-collapse:collapse;font-size:11px;}
+.tide-table th{background:#e3f2fd;color:#0d47a1;padding:6px 8px;text-align:left;font-weight:700;}
+.tide-table td{padding:6px 8px;border-bottom:1px solid #f0f0f0;vertical-align:top;}
+.tide-table tr:hover td{background:#f9fbe7;}
+.tide-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;}
+.tide-sari{background:#e3f2fd;color:#0d47a1;}
+.tide-mid{background:#e8f5e9;color:#2e7d32;}
+.tide-jogeum{background:#f3e5f5;color:#6a1b9a;}
+.tide-manju{background:#e0f7fa;color:#006064;}
+.tide-ganjo{background:#fff3e0;color:#e65100;}
+
+/* 낚시 카드 길찾기·즐겨찾기 */
+.card-nav-row{display:flex;gap:6px;padding:6px 14px 10px;border-top:1px solid #f0f0f0;flex-wrap:wrap;align-items:center;}
+.nav-btn{display:inline-flex;align-items:center;padding:5px 11px;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;border:none;cursor:pointer;white-space:nowrap;}
+.nav-btn.nv{background:#e8f5e9;color:#2e7d32;}
+.nav-btn.kk{background:#fff8e1;color:#b8860b;}
+.nav-btn.fav{background:#fce4ec;color:#c62828;border:1.5px solid #f8bbd0;font-size:14px;padding:3px 10px;transition:background .15s;}
+.nav-btn.fav.active{background:#e91e63;color:#fff;border-color:#e91e63;}
+.nav-btn.jo{background:#fff3e0;color:#e65100;}
+.nav-btn.wdy{background:#e3f2fd;color:#0d47a1;}
+/* 풍랑특보 배지 */
+.alert-ticker{background:#b71c1c;color:#fff;padding:7px 14px;font-size:12px;font-weight:700;
+              text-align:center;cursor:pointer;border-radius:8px;margin:6px 14px 2px;display:none;}
+/* KHOA 조위예보 바 */
+.khoa-tide-bar{background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:10px;
+               padding:7px 14px;margin:4px 14px 2px;font-size:12px;display:none;}
+/* 금어기 경고 배너 */
+.ban-bar{background:#fce4ec;color:#c62828;border-radius:8px;padding:7px 12px;
+          font-size:12px;font-weight:700;margin-bottom:8px;text-align:center;}
+/* 물때 위젯 */
+.tide-widget-bar{background:linear-gradient(135deg,#e3f2fd 0%,#e8f5e9 100%);
+                  border:1.5px solid #bbdefb;border-radius:12px;padding:9px 14px;
+                  margin:8px 14px 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.tide-widget-num{font-size:24px;font-weight:900;line-height:1;color:#0d47a1;}
+.tide-widget-unit{font-size:13px;color:#555;font-weight:600;}
+.tide-widget-tag{font-size:11px;font-weight:700;border-radius:6px;padding:3px 9px;}
+.tide-widget-info{font-size:11px;color:#37474f;flex:1;min-width:0;}
+.tide-widget-link{font-size:11px;color:#1565c0;text-decoration:none;font-weight:700;white-space:nowrap;}
+/* 접근방법 배지 */
+.access-badge{display:inline-block;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:2px;}
+
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;padding:11px 14px 5px;gap:8px;}
+.card-title{font-size:14px;font-weight:700;flex:1;line-height:1.4;}
+.badge-row{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
+.star-badge{background:var(--star);color:#333;border-radius:10px;padding:2px 7px;font-size:11px;font-weight:700;}
+.local-badge{background:#e91e63;color:#fff;border-radius:10px;padding:2px 7px;font-size:11px;font-weight:700;}
+.cat-badge{border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;color:#fff;}
+
+.card-body{padding:0 14px 10px;}
+.info-row{display:flex;gap:6px;margin-bottom:5px;align-items:flex-start;}
+.info-label{font-size:10px;font-weight:700;color:#fff;background:var(--sub);
+            border-radius:3px;padding:1px 5px;white-space:nowrap;margin-top:2px;flex-shrink:0;}
+.info-val{font-size:12px;line-height:1.5;}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0;}
+.ftag{background:#e8f0fe;color:#1a73e8;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600;}
+.fish-card.yeongdeok .ftag{background:#e6f4ea;color:#0f9d58;}
+.fish-card.uljin .ftag{background:#fce8e6;color:#d93025;}
+.fish-card.goseong .ftag{background:#e0f2f1;color:#00695c;}
+.fish-card.sokcho .ftag{background:#e8f5e9;color:#2e7d32;}
+.fish-card.gangneung .ftag{background:#e3f2fd;color:#01579b;}
+.fish-card.samcheok .ftag{background:#ede7f6;color:#4527a0;}
+.mtag{border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600;
+      background:#f3e5f5;color:#7b1fa2;}
+
+/* 가격대 */
+.price-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.price-won{font-size:16px;font-weight:900;letter-spacing:-1px;}
+.price-note{font-size:11px;color:var(--sub);}
+
+/* 낚시 필터바 */
+.fish-filter-bar{background:#fff;border-bottom:1px solid var(--border);padding:8px 12px;}
+.fish-count-bar{background:#fafafa;padding:6px 14px;font-size:11px;color:var(--sub);
+                border-bottom:1px solid var(--border);}
+.cfbtn[data-time="all"]  {border-color:#888;color:#555;}
+.cfbtn[data-time="all"].on{background:#555;color:#fff;}
+.cfbtn[data-time="dawn"] {border-color:#e65100;color:#e65100;}
+.cfbtn[data-time="dawn"].on{background:#e65100;color:#fff;}
+.cfbtn[data-time="night"]{border-color:#283593;color:#283593;}
+.cfbtn[data-time="night"].on{background:#283593;color:#fff;}
+.cfbtn[data-time="day"]  {border-color:#558b2f;color:#558b2f;}
+.cfbtn[data-time="day"].on{background:#558b2f;color:#fff;}
+/* 지역 버튼 (낚시 탭용) — data-fr로 구분 */
+.cfbtn[data-fr="all"]       {border-color:#888;color:#555;}
+.cfbtn[data-fr="all"].on    {background:#555;color:#fff;}
+.cfbtn[data-fr="pohang"]    {border-color:var(--pohang);color:var(--pohang);}
+.cfbtn[data-fr="pohang"].on {background:var(--pohang);color:#fff;}
+.cfbtn[data-fr="yeongdeok"] {border-color:var(--yeongdeok);color:var(--yeongdeok);}
+.cfbtn[data-fr="yeongdeok"].on{background:var(--yeongdeok);color:#fff;}
+.cfbtn[data-fr="uljin"]     {border-color:var(--uljin);color:var(--uljin);}
+.cfbtn[data-fr="uljin"].on  {background:var(--uljin);color:#fff;}
+.cfbtn[data-fr="goseong"]   {border-color:#00838f;color:#00838f;}
+.cfbtn[data-fr="goseong"].on{background:#00838f;color:#fff;}
+.cfbtn[data-fr="sokcho"]    {border-color:#2e7d32;color:#2e7d32;}
+.cfbtn[data-fr="sokcho"].on {background:#2e7d32;color:#fff;}
+.cfbtn[data-fr="gangneung"] {border-color:#01579b;color:#01579b;}
+.cfbtn[data-fr="gangneung"].on{background:#01579b;color:#fff;}
+.cfbtn[data-fr="samcheok"]  {border-color:#4527a0;color:#4527a0;}
+.cfbtn[data-fr="samcheok"].on{background:#4527a0;color:#fff;}
+/* 어종 필터 버튼 */
+.cfbtn[data-fish="all"]         {border-color:#888;color:#555;}
+.cfbtn[data-fish="all"].on      {background:#555;color:#fff;}
+.cfbtn[data-fish="광어"]        {border-color:#1565c0;color:#1565c0;}
+.cfbtn[data-fish="광어"].on     {background:#1565c0;color:#fff;}
+.cfbtn[data-fish="농어"]        {border-color:#00695c;color:#00695c;}
+.cfbtn[data-fish="농어"].on     {background:#00695c;color:#fff;}
+.cfbtn[data-fish="삼치"]        {border-color:#e65100;color:#e65100;}
+.cfbtn[data-fish="삼치"].on     {background:#e65100;color:#fff;}
+.cfbtn[data-fish="볼락"]        {border-color:#6a1b9a;color:#6a1b9a;}
+.cfbtn[data-fish="볼락"].on     {background:#6a1b9a;color:#fff;}
+.cfbtn[data-fish="무늬오징어"]  {border-color:#b71c1c;color:#b71c1c;}
+.cfbtn[data-fish="무늬오징어"].on{background:#b71c1c;color:#fff;}
+.cfbtn[data-fish="방어"]        {border-color:#e91e63;color:#e91e63;}
+.cfbtn[data-fish="방어"].on     {background:#e91e63;color:#fff;}
+/* 어종 정보 카드 */
+.species-card{border-radius:12px;padding:12px 14px;margin:8px 0;border-left:5px solid #ccc;}
+.species-card-title{font-size:14px;font-weight:800;margin-bottom:8px;}
+.species-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.species-meta-item{font-size:11px;background:#f8f9fa;border-radius:6px;padding:5px 8px;}
+.species-meta-label{color:#888;font-size:10px;}
+.species-meta-val{font-weight:700;color:#202124;}
+.species-ban{color:#c62828;font-weight:700;}
+.species-ok{color:#2e7d32;font-weight:700;}
+
+.timing-box{background:#e8f5e9;border-radius:6px;padding:6px 10px;font-size:11px;color:#1b5e20;margin-top:5px;line-height:1.6;}
+.timing-box::before{content:"⏰ ";}
+.tip-box{background:#fffde7;border-radius:6px;padding:6px 10px;font-size:11px;color:#5f4b00;margin-top:5px;}
+.tip-box::before{content:"💡 ";}
+.review-box{background:#fce4ec;border-radius:6px;padding:6px 10px;font-size:11px;color:#880e4f;margin-top:5px;}
+.review-box::before{content:"💬 ";}
+.card-actions{display:flex;gap:6px;padding:0 14px 11px;flex-wrap:wrap;}
+
+.top5-section{background:linear-gradient(135deg,#1a237e,#283593);border-radius:12px;
+              padding:14px;color:#fff;margin-bottom:10px;}
+.top5-title{font-size:13px;font-weight:700;margin-bottom:9px;}
+.top5-list{display:flex;flex-direction:column;gap:7px;}
+.top5-item{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.12);
+           border-radius:8px;padding:7px 10px;cursor:pointer;}
+.top5-rank{font-size:17px;font-weight:900;color:var(--star);width:22px;text-align:center;flex-shrink:0;}
+.top5-name{font-size:12px;font-weight:700;}
+.top5-desc{font-size:11px;opacity:.8;}
+
+.weather-section{background:#fff;border-radius:12px;padding:13px;
+                 box-shadow:0 1px 4px rgba(0,0,0,.08);margin-top:10px;}
+.weather-title{font-size:13px;font-weight:700;margin-bottom:8px;}
+.weather-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.weather-card{border:1px solid var(--border);border-radius:8px;padding:7px;text-align:center;}
+.weather-icon{font-size:20px;}
+.weather-label{font-size:10px;color:var(--sub);margin-top:1px;}
+.weather-val{font-size:12px;font-weight:700;margin-top:1px;}
+.weather-ok{color:#0f9d58;}.weather-warn{color:#f57c00;}
+.check-list{margin-top:9px;display:flex;flex-direction:column;gap:4px;}
+.check-item{display:flex;align-items:center;gap:7px;font-size:11px;}
+.check-icon{font-size:13px;flex-shrink:0;}
+
+.divider{height:6px;background:#f0f0f0;margin:4px 0;}
+.empty-msg{text-align:center;padding:30px 20px;color:var(--sub);font-size:13px;}
+
+footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top:1px solid var(--border);}
+
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(26,115,232,.5);}
+                 70%{box-shadow:0 0 0 12px rgba(26,115,232,0);}100%{box-shadow:0 0 0 0;}}
+.highlight{animation:pulse 1s ease 2;}
+
+/* ══ 날씨 뷰 ══════════════════════════════════════ */
+.wx-topbar{display:flex;justify-content:space-between;align-items:center;
+           padding:10px 12px;background:#fff;border-bottom:1px solid var(--border);}
+.wx-updated{font-size:11px;color:var(--sub);}
+.wx-refresh{padding:5px 12px;border-radius:14px;border:1.5px solid #00838f;
+            color:#00838f;background:#fff;font-size:11px;font-weight:700;cursor:pointer;}
+.wx-loading{text-align:center;padding:50px 20px;color:var(--sub);}
+@keyframes spin{to{transform:rotate(360deg);}}
+.wx-spinner{width:34px;height:34px;border:3px solid #e0e0e0;border-top-color:#00838f;
+            border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+.wx-grid{display:flex;flex-direction:column;gap:12px;padding:12px;}
+.wx-card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.09);overflow:hidden;}
+.wx-header{padding:11px 16px 9px;color:#fff;
+           display:flex;justify-content:space-between;align-items:center;}
+.wx-region-name{font-size:15px;font-weight:700;}
+.wx-update-time{font-size:10px;opacity:.75;}
+.wx-body{padding:12px 16px 0;}
+.wx-main{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
+.wx-icon{font-size:46px;line-height:1;flex-shrink:0;}
+.wx-right{}
+.wx-temp{font-size:38px;font-weight:900;line-height:1.1;}
+.wx-desc{font-size:13px;color:#444;margin-top:2px;}
+.wx-feels{font-size:11px;color:#888;margin-top:1px;}
+.wx-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
+.wx-stat{background:#f8f9fa;border-radius:8px;padding:8px 6px;text-align:center;}
+.wx-stat-label{font-size:9px;color:#888;margin-bottom:3px;}
+.wx-stat-val{font-size:13px;font-weight:700;line-height:1.2;}
+.wx-stat-unit{font-size:9px;color:#888;}
+.wx-safety{border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;
+           text-align:center;margin-bottom:10px;}
+.wx-safety.best  {background:#e3f2fd;color:#1565c0;}
+.wx-safety.good  {background:#e8f5e9;color:#2e7d32;}
+.wx-safety.ok    {background:#fff8e1;color:#f9a825;}
+.wx-safety.warn  {background:#fff3e0;color:#e65100;}
+.wx-safety.danger{background:#ffebee;color:#c62828;}
+/* 시간별 예보 */
+.wx-hourly-wrap{overflow-x:auto;padding-bottom:2px;}
+.wx-hourly-label{font-size:10px;font-weight:700;color:var(--sub);padding:0 16px 4px;}
+.wx-hourly-row{display:flex;gap:5px;padding:0 16px 12px;width:max-content;}
+.wx-hcell{background:#f8f9fa;border-radius:8px;padding:6px 7px;text-align:center;min-width:52px;}
+.wx-hcell.golden-dawn {background:#fff8e1;border:1.5px solid #ff8f00;}
+.wx-hcell.golden-night{background:#e8eaf6;border:1.5px solid #3949ab;}
+.wx-htime{font-size:10px;color:#888;}
+.wx-hicon{font-size:17px;margin:3px 0;}
+.wx-htemp{font-size:12px;font-weight:700;}
+.wx-hwind{font-size:10px;font-weight:600;color:#1a73e8;}
+.wx-hpop {font-size:10px;color:#0277bd;}
+
+/* 날짜 선택 캘린더 오버레이 */
+.cal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;
+             display:none;align-items:flex-end;justify-content:center;}
+.cal-overlay.open{display:flex;}
+.cal-panel{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 28px;
+           width:100%;max-width:400px;box-shadow:0 -4px 24px rgba(0,0,0,.2);}
+.cal-handle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.cal-nav{background:none;border:none;font-size:20px;cursor:pointer;
+         color:#0d47a1;padding:6px 12px;border-radius:10px;}
+.cal-nav:active{background:#e8f0fe;}
+.cal-month-label{font-size:15px;font-weight:800;color:#202124;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-dow{font-size:10px;color:#888;text-align:center;padding:6px 0;font-weight:700;}
+.cal-day{font-size:13px;text-align:center;padding:9px 2px;border-radius:10px;
+         cursor:pointer;font-weight:600;min-height:38px;
+         display:flex;align-items:center;justify-content:center;}
+.cal-day:active:not(.cal-disabled){background:#e8f0fe;}
+.cal-day.cal-today{color:#0d47a1;border:2px solid #c5cae9;font-weight:800;}
+.cal-day.cal-selected{background:#0d47a1;color:#fff!important;border:none!important;}
+.cal-day.cal-disabled{color:#ccc;cursor:default;font-weight:400;}
+.cal-day.cal-empty{cursor:default;}
+.cal-day.cal-avail{color:#202124;}
+.cal-close-row{display:flex;gap:8px;margin-top:14px;}
+.cal-today-btn{flex:1;padding:11px;border-radius:12px;border:2px solid #0d47a1;
+               background:#fff;font-size:12px;font-weight:800;color:#0d47a1;cursor:pointer;}
+.cal-close-btn{flex:2;padding:11px;border-radius:12px;border:none;
+               background:#f5f5f5;font-size:12px;font-weight:700;color:#555;cursor:pointer;}
+.date-sel-btn{border-color:#e65100!important;color:#e65100!important;}
+.date-sel-btn.on{background:#e65100!important;color:#fff!important;}
+.wx-legend{display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:var(--sub);
+           padding:6px 12px 14px;}
+.wx-legend-item{display:flex;align-items:center;gap:4px;}
+.wx-legend-dot{width:8px;height:8px;border-radius:2px;}
+.wx-err{text-align:center;padding:20px;color:#c62828;font-size:12px;}
+
+/* ── Windy 해양상세 패널 ─────────────────────── */
+#map-view{position:relative;}
+#windy-panel{display:none;flex-direction:column;height:calc(100vh - 126px);}
+.windy-ctrl{display:flex;gap:6px;padding:8px 12px;background:#0d47a1;
+            align-items:center;flex-wrap:wrap;flex-shrink:0;}
+.wov-btn{padding:5px 13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.45);
+         background:rgba(255,255,255,.12);color:#fff;font-size:11px;font-weight:700;
+         cursor:pointer;white-space:nowrap;transition:.15s;}
+.wov-btn.active{background:#fff;color:#0d47a1;border-color:#fff;}
+#windy-iframe{height:42vh;min-height:200px;flex-shrink:0;border:none;display:block;width:100%;}
+/* ── 해양상세 하단 데이터 ─────────────────────── */
+.marine-filter-bar{display:flex;gap:5px;padding:6px 10px;background:#f5f5f5;
+                   border-top:1px solid #e0e0e0;border-bottom:1px solid #e0e0e0;flex-shrink:0;
+                   overflow-x:auto;}
+.marine-filter-bar::-webkit-scrollbar{height:0;}
+.mfbtn{padding:4px 13px;border-radius:12px;border:1.5px solid #bdbdbd;font-size:11px;
+       font-weight:700;cursor:pointer;color:#555;background:#fff;white-space:nowrap;}
+.mfbtn.active{background:#0d47a1;color:#fff;border-color:#0d47a1;}
+#marine-detail{flex:1;overflow-y:auto;padding:10px;background:#f8f9fa;}
+.md-grid{display:flex;flex-direction:column;gap:10px;}
+.md-card{background:#fff;border-radius:12px;box-shadow:0 1px 5px rgba(0,0,0,.1);overflow:hidden;}
+.md-card-hd{padding:9px 12px;display:flex;justify-content:space-between;
+            align-items:center;background:#fafafa;border-bottom:1px solid #f0f0f0;}
+.md-city-nm{font-size:14px;font-weight:800;}
+.md-coast-tag{margin-left:5px;font-size:10px;color:#777;background:#eee;
+              border-radius:8px;padding:1px 6px;font-weight:600;}
+.md-safe-pill{font-size:10px;font-weight:700;border-radius:20px;padding:3px 10px;}
+.md-card-bd{padding:10px 12px;}
+.md-main{font-size:20px;font-weight:800;margin-bottom:7px;}
+.md-feels{font-size:11px;font-weight:500;color:#888;margin-left:5px;}
+.md-2col{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;margin-bottom:6px;}
+.md-row{display:flex;align-items:center;gap:3px;font-size:11px;line-height:1.4;}
+.md-lbl{color:#999;font-size:10px;margin:0 2px;}
+.md-note{font-size:10px;color:#aaa;padding-top:5px;border-top:1px solid #f0f0f0;margin-top:2px;}
+/* ── 클릭 날씨 모드 ── */
+#map.click-wx-mode{cursor:crosshair!important;}
+#map.click-wx-mode .leaflet-interactive{cursor:crosshair!important;}
+/* ── 내륙 소형 라벨 ── */
+.leaflet-tooltip.wx-label-sm{
+  background:rgba(255,255,255,.86);border:none;border-radius:5px;
+  padding:1px 5px;box-shadow:0 1px 4px rgba(0,0,0,.14);
+  font-family:inherit;white-space:nowrap;cursor:pointer;user-select:none;font-size:10px;}
+.leaflet-tooltip.wx-label-sm::before{display:none;}
+/* ── 지도 위 날씨 지역명 라벨 (클릭하면 상세 팝업) ── */
+.leaflet-tooltip.wx-label{
+  background:rgba(255,255,255,.93);border:none;border-radius:7px;
+  padding:3px 7px;box-shadow:0 1px 6px rgba(0,0,0,.2);
+  font-family:inherit;white-space:nowrap;
+  cursor:pointer;user-select:none;}
+.leaflet-tooltip.wx-label::before{display:none;}
+/* 날씨 팝업 내부 */
+.wx-popup-main{font-size:22px;font-weight:900;line-height:1.2;margin:4px 0 2px;}
+.wx-popup-row{font-size:11px;color:#444;line-height:1.5;}
+.wx-popup-safe{font-size:11px;font-weight:800;border-radius:6px;padding:4px 8px;text-align:center;margin-top:6px;}
+
+@media print{
+  .tab-bar,.map-controls,.fish-filter-bar{display:none!important;}
+  #map-view{display:none!important;}
+  #fish-view{display:block!important;}
+  .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid;}
+}
+
+/* ── 메모 모달 ────────────────────────────────── */
+.note-modal-overlay{display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);align-items:flex-end;}
+.note-modal-overlay.open{display:flex;}
+.note-sheet{background:#fff;width:100%;max-height:72vh;border-radius:20px 20px 0 0;padding:20px 20px 28px;overflow-y:auto;animation:slideUp .3s ease;}
+.note-title{font-size:15px;font-weight:800;color:#0d47a1;margin-bottom:10px;}
+.note-textarea{width:100%;min-height:110px;border:1.5px solid #e0e0e0;border-radius:10px;padding:10px;font-size:13px;font-family:inherit;resize:vertical;outline:none;box-sizing:border-box;}
+.note-textarea:focus{border-color:#0d47a1;}
+.note-btn-row{display:flex;gap:8px;margin-top:10px;}
+.note-save-btn{flex:1;padding:10px;background:#0d47a1;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+.note-del-btn{padding:10px 14px;background:#fff;color:#e53935;border:1.5px solid #e53935;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;}
+.note-close-btn{padding:10px 14px;background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:10px;font-size:13px;cursor:pointer;}
+.nav-btn.memo{background:#e8f5e9;color:#2e7d32;}
+.nav-btn.memo.has-note{background:#2e7d32;color:#fff;}
+.nav-btn.share{background:#e3f2fd;color:#0d47a1;}
+
+/* ── Windy 로딩 오버레이 ──────────────────────── */
+.windy-wrap{position:relative;}
+.windy-loading{position:absolute;inset:0;background:#0d2a4a;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#90caf9;font-size:13px;z-index:5;transition:opacity .5s;}
+.windy-loading.hidden{opacity:0;pointer-events:none;}
+.windy-spinner{width:36px;height:36px;border:3px solid rgba(144,202,249,.3);border-top-color:#90caf9;border-radius:50%;animation:spin .9s linear infinite;margin-bottom:10px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── 출조 일지 뷰 ─────────────────────────────── */
+#log-view{display:none;padding:14px 14px 80px;}
+.log-form{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:16px;}
+.log-form-title{font-size:15px;font-weight:800;color:#0d47a1;margin-bottom:12px;}
+.log-input-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.log-input{width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;}
+.log-input:focus{border-color:#0d47a1;}
+.log-memo-input{width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-family:inherit;min-height:70px;resize:vertical;outline:none;margin-bottom:8px;box-sizing:border-box;}
+.log-memo-input:focus{border-color:#0d47a1;}
+.log-save-btn{width:100%;padding:11px;background:#0d47a1;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+.log-list-wrap{display:flex;flex-direction:column;gap:10px;}
+.log-item{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 5px rgba(0,0,0,.07);border-left:4px solid #0d47a1;}
+.log-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.log-item-date{font-size:11px;font-weight:700;color:#0d47a1;}
+.log-item-weather{font-size:11px;color:#888;}
+.log-item-del{font-size:11px;color:#e53935;background:none;border:none;cursor:pointer;padding:2px 6px;}
+.log-item-spot{font-size:14px;font-weight:700;margin-bottom:3px;}
+.log-item-fish{font-size:12px;color:#2e7d32;margin-bottom:3px;}
+.log-item-memo{font-size:12px;color:#555;line-height:1.5;white-space:pre-wrap;}
+.log-empty{text-align:center;padding:40px 20px;color:#aaa;font-size:14px;}
+
+/* ── 도구 뷰 ─────────────────────────────────── */
+#tool-view{display:none;padding:14px 14px 80px;}
+.tool-section{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:16px;}
+.tool-section-title{font-size:15px;font-weight:800;color:#0d47a1;margin-bottom:12px;}
+.calc-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;}
+.calc-label{font-size:12px;font-weight:700;color:#555;white-space:nowrap;min-width:60px;}
+.calc-select,.calc-input{flex:1;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none;min-width:0;}
+.calc-select:focus,.calc-input:focus{border-color:#0d47a1;}
+.calc-btn{padding:8px 16px;background:#0d47a1;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.calc-result{background:#e8f5e9;border-radius:8px;padding:10px 14px;font-size:13px;color:#1b5e20;font-weight:700;margin-top:6px;display:none;line-height:1.6;}
+.custom-spot-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.csi{padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;}
+.csi:focus{border-color:#0d47a1;}
+.csi.full{grid-column:1/-1;}
+.cs-add-btn{grid-column:1/-1;padding:10px;background:#0d47a1;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;}
+.cs-list{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
+.cs-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f8f9fa;border-radius:8px;border:1px solid #e0e0e0;}
+.cs-item-info{flex:1;}
+.cs-item-name{font-size:13px;font-weight:700;}
+.cs-item-fish{font-size:11px;color:#555;}
+.cs-item-btns{display:flex;gap:6px;}
+.cs-go-btn{font-size:11px;background:#e8f0fe;color:#1a73e8;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;}
+.cs-del-btn{font-size:11px;color:#e53935;background:none;border:1px solid #e53935;border-radius:6px;padding:4px 8px;cursor:pointer;}
+
+/* ── PWA 설치 FAB ─────────────────────────────── */
+#install-fab{
+  position:fixed;bottom:72px;right:16px;z-index:9999;
+  background:#0d47a1;color:#fff;border:none;border-radius:28px;
+  padding:12px 18px;font-size:14px;font-weight:700;
+  box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+  animation:fabPop .4s cubic-bezier(.175,.885,.32,1.275);
+}
+#install-fab:active{transform:scale(.95);}
+@keyframes fabPop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ── 설치 가이드 모달 ─────────────────────────── */
+#install-guide{
+  display:none;position:fixed;inset:0;z-index:10000;
+  background:rgba(0,0,0,.55);align-items:flex-end;
+}
+#install-guide.open{display:flex;}
+.ig-sheet{
+  background:#fff;width:100%;max-height:80vh;
+  border-radius:20px 20px 0 0;padding:20px 20px 32px;
+  overflow-y:auto;animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.ig-title{font-size:18px;font-weight:800;color:#0d47a1;margin-bottom:4px;}
+.ig-sub{font-size:12px;color:#666;margin-bottom:16px;}
+.ig-tab-row{display:flex;gap:8px;margin-bottom:16px;}
+.ig-tab{
+  flex:1;padding:8px 0;text-align:center;border-radius:8px;
+  border:2px solid #e0e0e0;font-size:13px;font-weight:700;
+  cursor:pointer;color:#666;background:#fafafa;
+}
+.ig-tab.active{border-color:#0d47a1;color:#0d47a1;background:#e8eaf6;}
+.ig-step{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:10px 0;border-bottom:1px solid #f0f0f0;
+}
+.ig-step:last-child{border-bottom:none;}
+.ig-num{
+  min-width:26px;height:26px;border-radius:13px;
+  background:#0d47a1;color:#fff;font-size:12px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ig-step-body{font-size:13px;line-height:1.5;color:#333;}
+.ig-step-body strong{color:#0d47a1;}
+.ig-close{
+  display:block;margin:20px auto 0;padding:12px 32px;
+  background:#0d47a1;color:#fff;border:none;border-radius:24px;
+  font-size:14px;font-weight:700;cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🎣 한국 해안 루어낚시 가이드</h1>
+  <p>포항·영덕·울진 포인트 · 전국 해안 실시간 날씨·해양 정보</p>
+  <div class="meta-row">
+    <span class="meta-chip">📍 낚시 19곳</span>
+    <span class="meta-chip">🌐 날씨 33곳</span>
+    <span class="meta-chip">🌡️ 8월 수온 22~24°C</span>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" id="tab-map"  onclick="switchTab('map')">🗺️ 지도·날씨</div>
+  <div class="tab"        id="tab-fish" onclick="switchTab('fish')">🎣 낚시</div>
+  <div class="tab"        id="tab-log"  onclick="switchTab('log')">📓 일지</div>
+  <div class="tab"        id="tab-tool" onclick="switchTab('tool')">🔧 도구</div>
+</div>
+
+<!-- ══ 지도·날씨 통합 뷰 ══ -->
+<div id="map-view">
+  <div class="map-controls">
+    <span class="ctrl-label">어종</span>
+    <button class="fbtn all on"    onclick="filterAll(this)">전체</button>
+    <button class="fbtn" data-fcolor="#1565c0" style="border-color:#1565c0;color:#1565c0" onclick="filterFish('광어',this)">🐟 광어</button>
+    <button class="fbtn" data-fcolor="#00695c" style="border-color:#00695c;color:#00695c" onclick="filterFish('농어',this)">🐟 농어</button>
+    <button class="fbtn" data-fcolor="#e65100" style="border-color:#e65100;color:#e65100" onclick="filterFish('삼치',this)">🐟 삼치</button>
+    <button class="fbtn" data-fcolor="#6a1b9a" style="border-color:#6a1b9a;color:#6a1b9a" onclick="filterFish('볼락',this)">🐟 볼락</button>
+    <button class="fbtn" data-fcolor="#b71c1c" style="border-color:#b71c1c;color:#b71c1c" onclick="filterFish('무늬오징어',this)">🦑 오징어</button>
+    <button class="fbtn fishonly"  onclick="filterFishOnly(this)">★ 추천</button>
+    <span class="ctrl-sep">┃</span>
+    <button class="fbtn marinebtn" id="ctrl-marine" onclick="toggleMarineLayer(this)">🌊 해양상세</button>
+    <button class="fbtn wxbtn" id="ctrl-click-wx" onclick="toggleClickWx(this)" title="지도를 클릭하면 해당 위치 날씨 조회">📍 지점날씨</button>
+    <button class="fbtn date-sel-btn" id="date-sel-btn" onclick="openCalendar()" title="날씨 조회 날짜 선택 (최대 16일)">📅 오늘</button>
+    <button class="wx-refresh" onclick="fetchWeather(true)" style="margin-left:auto">🔄</button>
+  </div>
+  <div id="map"></div>
+
+  <!-- ── 해양상세: Windy + 상세 데이터 패널 ── -->
+  <div id="windy-panel">
+    <!-- Windy 오버레이 버튼 -->
+    <div class="windy-ctrl">
+      <button class="wov-btn active" id="wov-waves" onclick="setWindyOverlay('waves')">🌊 파도·너울</button>
+      <button class="wov-btn"        id="wov-wind"  onclick="setWindyOverlay('wind')">💨 바람</button>
+      <button class="wov-btn"        id="wov-rain"  onclick="setWindyOverlay('rain')">🌧 강수</button>
+      <button class="wov-btn"        id="wov-temp"  onclick="setWindyOverlay('temp')">🌡 기온</button>
+      <a href="https://www.weather.go.kr/w/special-report/overall.do" target="_blank"
+         style="padding:5px 11px;border-radius:14px;border:1.5px solid rgba(244,67,54,.6);background:rgba(244,67,54,.22);color:#ffcdd2;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">⚠️ 풍랑특보</a>
+      <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,.65)">핀치줌·드래그 · Windy.com</span>
+    </div>
+    <!-- Windy 지도 -->
+    <div class="windy-wrap">
+      <div class="windy-loading" id="windy-loading">
+        <div class="windy-spinner"></div>
+        <span>Windy 로딩 중...</span>
+      </div>
+      <iframe id="windy-iframe" allowfullscreen
+        onload="document.getElementById('windy-loading').classList.add('hidden')"
+        src="https://embed.windy.com/embed2.html?lat=35.5&lon=127.5&zoom=6&level=surface&overlay=waves&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=m%2Fs&metricTemp=%C2%B0C&radarRange=-1">
+      </iframe>
+    </div>
+    <!-- 해안별 상세 데이터 -->
+    <div class="marine-filter-bar">
+      <button class="mfbtn active" id="mf-all"  onclick="setMarineCoast('all',this)">🌐 전체</button>
+      <button class="mfbtn"        id="mf-동해" onclick="setMarineCoast('동해',this)">🔵 동해안</button>
+      <button class="mfbtn"        id="mf-서해" onclick="setMarineCoast('서해',this)">🟢 서해안</button>
+      <button class="mfbtn"        id="mf-남해" onclick="setMarineCoast('남해',this)">🟠 남해안</button>
+      <button class="mfbtn"        id="mf-제주" onclick="setMarineCoast('제주',this)">🟣 제주</button>
+    </div>
+    <div id="marine-detail">
+      <div style="text-align:center;padding:24px;color:#aaa;font-size:13px">
+        날씨 데이터를 불러오는 중입니다...
+      </div>
+    </div>
+  </div>
+</div><!-- /map-view -->
+
+<!-- ══ 낚시 목록 ══ -->
+<div id="fish-view">
+  <!-- 풍랑특보 배지 -->
+  <div class="alert-ticker" id="alert-badge"
+       onclick="switchTab('map');setTimeout(()=>{if(!marineDetailOn){const b=document.getElementById('ctrl-marine');if(b)toggleMarineLayer(b);}},300)">
+    ⚠️ 풍랑특보 발효 중 — 지도 탭에서 확인
+  </div>
+  <!-- 물때 위젯 -->
+  <div class="tide-widget-bar" id="tide-widget-bar">
+    <div><span class="tide-widget-num" id="tw-num">-</span><span class="tide-widget-unit">물</span></div>
+    <span class="tide-widget-tag" id="tw-tag">계산 중</span>
+    <div class="tide-widget-info" id="tw-info">로딩 중...</div>
+    <a href="https://www.badatime.com" target="_blank" class="tide-widget-link">📅 바다타임</a>
+  </div>
+  <div id="tide-approx-note" style="font-size:9px;color:#aaa;padding:1px 16px 4px">※ 달력 기반 근사값 · 정확한 물때는 바다타임 확인</div>
+  <!-- KHOA 조위예보 (Worker 연동 시 자동 표시) -->
+  <div class="khoa-tide-bar" id="khoa-tide-bar">
+    <span style="color:#2e7d32;font-weight:700">🌊 오늘 조위예보</span>
+    <span style="font-size:11px;color:#555;margin-left:6px" id="khoa-station"></span>
+    <div style="margin-top:5px;display:flex;gap:16px;flex-wrap:wrap">
+      <span>▲ 만조 <b id="khoa-hi" style="color:#0d47a1">-</b></span>
+      <span>▽ 간조 <b id="khoa-lo" style="color:#e65100">-</b></span>
+    </div>
+  </div>
+  <div class="fish-filter-bar">
+    <div class="rfl-row">
+      <span class="rfl-label">어종</span>
+      <button class="cfbtn on" data-fish="all"          onclick="setFishSpecies('all',this)">전체</button>
+      <button class="cfbtn"    data-fish="광어"          onclick="setFishSpecies('광어',this)">🐟 광어</button>
+      <button class="cfbtn"    data-fish="농어"          onclick="setFishSpecies('농어',this)">🐟 농어</button>
+      <button class="cfbtn"    data-fish="삼치"          onclick="setFishSpecies('삼치',this)">🐟 삼치</button>
+      <button class="cfbtn"    data-fish="볼락"          onclick="setFishSpecies('볼락',this)">🐟 볼락</button>
+      <button class="cfbtn"    data-fish="무늬오징어"    onclick="setFishSpecies('무늬오징어',this)">🦑 오징어</button>
+      <button class="cfbtn"    data-fish="방어"          onclick="setFishSpecies('방어',this)">🐟 방어</button>
+      <button class="cfbtn"    data-fish="감성돔"        onclick="setFishSpecies('감성돔',this)">🐟 감성돔</button>
+    </div>
+    <div class="rfl-row">
+      <span class="rfl-label">바다</span>
+      <button class="cfbtn on" data-fr="all"   onclick="setFishRegion('all',this)">전체</button>
+      <button class="cfbtn"    data-fr="east"  onclick="setFishRegion('east',this)">🔵 동해</button>
+      <button class="cfbtn"    data-fr="west"  onclick="setFishRegion('west',this)">🟦 서해</button>
+      <button class="cfbtn"    data-fr="south" onclick="setFishRegion('south',this)">🟥 남해</button>
+      <button class="cfbtn"    data-fr="jeju"  onclick="setFishRegion('jeju',this)">🟠 제주</button>
+    </div>
+    <div class="rfl-row">
+      <span class="rfl-label">시간대</span>
+      <button class="cfbtn on" data-time="all"   onclick="setFishTime('all',this)">전체</button>
+      <button class="cfbtn"    data-time="dawn"  onclick="setFishTime('dawn',this)">🌅 새벽·오전</button>
+      <button class="cfbtn"    data-time="night" onclick="setFishTime('night',this)">🌙 야간</button>
+      <button class="cfbtn"    data-time="day"   onclick="setFishTime('day',this)">☀️ 낮·오후</button>
+    </div>
+    <div class="rfl-row">
+      <span class="rfl-label">접근</span>
+      <button class="cfbtn on" data-access="all"    onclick="setFishAccess('all',this)">전체</button>
+      <button class="cfbtn"    data-access="도보"   onclick="setFishAccess('도보',this)">🚶 도보</button>
+      <button class="cfbtn"    data-access="방파제" onclick="setFishAccess('방파제',this)">⚓ 방파제</button>
+      <button class="cfbtn"    data-access="갯바위" onclick="setFishAccess('갯바위',this)">🪨 갯바위</button>
+      <button class="cfbtn"    data-access="선상"   onclick="setFishAccess('선상',this)">🚢 선상</button>
+    </div>
+    <div class="rfl-row">
+      <span class="rfl-label">저장</span>
+      <button class="cfbtn" id="fav-toggle-btn" onclick="toggleFavFilter(this)">♥ 즐겨찾기만</button>
+    </div>
+  </div>
+  <div class="fish-count-bar" id="fish-count">전체 43개 포인트 표시 중</div>
+  <div class="section-wrap" id="fish-cards-wrap"></div>
+  <div class="section-wrap" style="padding-top:0">
+    <div class="top5-section">
+      <div class="top5-title">🏆 핵심 추천 TOP 5 ★</div>
+      <div class="top5-list">
+        <div class="top5-item" onclick="goMap(16)"><div class="top5-rank">1</div><div><div class="top5-name">죽변항 방파제</div><div class="top5-desc">다어종 복합 · 8월 삼치 시즌 개막</div></div></div>
+        <div class="top5-item" onclick="goMap(4)"><div class="top5-rank">2</div><div><div class="top5-name">월포해수욕장</div><div class="top5-desc">광어 바닥지형 최적 · 동해안 대표 명소</div></div></div>
+        <div class="top5-item" onclick="goMap(1)"><div class="top5-rank">3</div><div><div class="top5-name">칠포방파제</div><div class="top5-desc">미터급 농어 조과 다수 · 접근성 최상</div></div></div>
+        <div class="top5-item" onclick="goMap(11)"><div class="top5-rank">4</div><div><div class="top5-name">대진해수욕장</div><div class="top5-desc">광어 개체수 가장 풍부 · 무늬오징어 병행</div></div></div>
+        <div class="top5-item" onclick="goMap(15)"><div class="top5-rank">5</div><div><div class="top5-name">구산항 빨간등대</div><div class="top5-desc">대형 광어 전문 포인트</div></div></div>
+      </div>
+    </div>
+    <div class="weather-section">
+      <div class="weather-title">☁️ 출조 전 날씨 체크 기준</div>
+      <div class="weather-grid">
+        <div class="weather-card"><div class="weather-icon">💨</div><div class="weather-label">풍속 권장</div><div class="weather-val weather-ok">5 m/s 이하</div></div>
+        <div class="weather-card"><div class="weather-icon">🌊</div><div class="weather-label">파고 권장</div><div class="weather-val weather-ok">1.0 m 이하</div></div>
+        <div class="weather-card"><div class="weather-icon">🌡️</div><div class="weather-label">8월 수온</div><div class="weather-val weather-ok">22~24°C</div></div>
+        <div class="weather-card"><div class="weather-icon">🌀</div><div class="weather-label">태풍 주의</div><div class="weather-val weather-warn">8월 최다</div></div>
+      </div>
+      <div class="check-list">
+        <div class="check-item"><span class="check-icon">✅</span><span>출발 5일 전부터 기상청 해상예보 매일 확인</span></div>
+        <div class="check-item"><span class="check-icon">✅</span><span>바다타임 앱으로 물때 확인 (들물~만조 전후 공략)</span></div>
+        <div class="check-item"><span class="check-icon">✅</span><span>새벽 3시~일출 / 일몰 후 야간 = 골든타임</span></div>
+        <div class="check-item"><span class="check-icon">⚠️</span><span>태풍 특보 발효 시 즉시 출조 취소</span></div>
+      </div>
+    </div>
+  </div>
+  <!-- ── 물때 전략 섹션 ── -->
+  <div class="section-wrap">
+    <div class="tide-section">
+      <div class="tide-title">🌊 물때 전략 &amp; 낚시 타이밍</div>
+
+      <div class="tide-sub">물때별 추천 어종</div>
+      <div class="tide-table-wrap">
+        <table class="tide-table">
+          <tr><th>물때</th><th>특징</th><th>추천 어종·포인트</th><th>비추</th></tr>
+          <tr><td><span class="tide-badge tide-sari">사리 7~10물</span></td>
+            <td>조류 최강·조차 최대</td>
+            <td>광어(석문방조제), 방어(왕돌초 8~9물), 돌돔·감성돔</td>
+            <td>초보자 갯바위</td></tr>
+          <tr><td><span class="tide-badge tide-mid">중간물 5~12물</span></td>
+            <td>적당한 조류</td>
+            <td>감성돔, 무늬오징어, 참돔, 돌돔</td>
+            <td>—</td></tr>
+          <tr><td><span class="tide-badge tide-jogeum">조금 1~4물</span></td>
+            <td>조류 약·조차 최소</td>
+            <td>동해 루어 일반, 입문자</td>
+            <td>서해 감성돔·광어</td></tr>
+          <tr><td><span class="tide-badge tide-manju">만조 전후</span></td>
+            <td>갯바위 접근 용이</td>
+            <td>무늬오징어, 감성돔, 학꽁치</td>
+            <td>—</td></tr>
+          <tr><td><span class="tide-badge tide-ganjo">간조 전후</span></td>
+            <td>수위 낮아 포인트 노출</td>
+            <td>점농어(간조 140cm↓, 서해 갯바위), 광어</td>
+            <td>—</td></tr>
+        </table>
+      </div>
+
+      <div class="tide-sub">동해 vs 서해·남해 핵심 차이</div>
+      <div class="tide-table-wrap">
+        <table class="tide-table">
+          <tr><th>구분</th><th>서해·남해</th><th>동해</th></tr>
+          <tr><td>조수간만차</td><td>최대 9m (서해)</td><td>20~30cm (소조차)</td></tr>
+          <tr><td>주요 변수</td><td>물때 번호 (필수 확인)</td><td>수온·풍향·파고 중심</td></tr>
+          <tr><td>조금 시기</td><td>감성돔·광어 부진</td><td>동해는 거의 무관</td></tr>
+          <tr><td>확인 앱</td><td>바다타임 (물때표)</td><td>윈디·기상청 (날씨·파고)</td></tr>
+        </table>
+      </div>
+
+      <div class="tide-sub">최적 입질 시간대</div>
+      <div class="tide-table-wrap">
+        <table class="tide-table">
+          <tr><th>시간대</th><th>추천 어종</th></tr>
+          <tr><td>🌅 새벽 02~07시</td><td>광어(들물), 임연수어, 삼치(일출 전후)</td></tr>
+          <tr><td>🌇 일몰 전후 1~2시간</td><td>임연수어, 볼락, 삼치, 농어</td></tr>
+          <tr><td>🌙 야간 (해 진 후)</td><td>무늬오징어, 볼락, 한치, 도루묵, 갈치</td></tr>
+          <tr><td>☀️ 주간 간조 시</td><td>점농어(서해 갯바위), 광어(모래·서프)</td></tr>
+          <tr><td>🌊 만조 전후</td><td>무늬오징어(에깅), 감성돔(갯바위), 학꽁치</td></tr>
+        </table>
+      </div>
+      <div style="font-size:10px;color:#9e9e9e;margin-top:8px;padding:6px 12px">
+        ※ 출처: 수산자원관리법 시행령(mof.go.kr) · 바다타임 · fishingpoint.kr<br>
+        ※ 물때 정보는 서해·남해 기준. 동해는 조류 영향이 작아 날씨·수온이 핵심 변수.
+      </div>
+    </div>
+  </div>
+
+  <footer>📋 출처: 기상청 · 바다타임 · fishingpoint.kr · fishingseasons.co.kr · mof.go.kr</footer>
+</div>
+
+
+
+<!-- ══ 출조 일지 뷰 ══ -->
+<div id="log-view">
+  <div class="log-form">
+    <div class="log-form-title">📓 출조 일지 작성</div>
+    <div class="log-input-grid">
+      <input class="log-input" id="log-date" type="date">
+      <input class="log-input" id="log-spot" type="text" placeholder="포인트명">
+      <input class="log-input" id="log-fish" type="text" placeholder="어종 (예: 광어, 농어)">
+      <input class="log-input" id="log-weather" type="text" placeholder="날씨 (예: 맑음 파고0.5m)">
+    </div>
+    <textarea class="log-memo-input" id="log-memo" placeholder="메모 (채비, 수온, 특이사항 등)"></textarea>
+    <button class="log-save-btn" onclick="addLog()">💾 일지 저장</button>
+  </div>
+  <div class="log-list-wrap" id="log-list"></div>
+</div>
+
+<!-- ══ 도구 뷰 ══ -->
+<div id="tool-view">
+  <!-- 채비 계산기 -->
+  <div class="tool-section">
+    <div class="tool-section-title">🎣 채비 계산기</div>
+    <div class="calc-row">
+      <span class="calc-label">타겟 어종</span>
+      <select class="calc-select" id="calc-fish" onchange="calcGear()">
+        <option value="">어종 선택</option>
+        <option value="광어">광어</option>
+        <option value="농어">농어</option>
+        <option value="삼치">삼치</option>
+        <option value="방어">방어</option>
+        <option value="볼락">볼락</option>
+        <option value="감성돔">감성돔</option>
+        <option value="무늬오징어">무늬오징어</option>
+        <option value="참돔">참돔</option>
+      </select>
+    </div>
+    <div class="calc-row">
+      <span class="calc-label">포인트 유형</span>
+      <select class="calc-select" id="calc-terrain" onchange="calcGear()">
+        <option value="방파제">방파제</option>
+        <option value="갯바위">갯바위</option>
+        <option value="서프">서프(해수욕장)</option>
+        <option value="선상">선상</option>
+      </select>
+    </div>
+    <div class="calc-result" id="calc-result"></div>
+  </div>
+
+  <!-- 낚싯줄 호수 → kg 환산 -->
+  <div class="tool-section">
+    <div class="tool-section-title">🧵 낚싯줄 호수 → 강도 환산</div>
+    <div class="calc-row">
+      <span class="calc-label">PE 호수</span>
+      <input class="calc-input" id="pe-num" type="number" step="0.1" min="0.1" max="10" placeholder="예) 1.0">
+      <button class="calc-btn" onclick="calcPE()">계산</button>
+    </div>
+    <div class="calc-result" id="pe-result"></div>
+    <div class="calc-row" style="margin-top:10px">
+      <span class="calc-label">카본 호수</span>
+      <input class="calc-input" id="carbon-num" type="number" step="0.5" min="0.5" max="20" placeholder="예) 3.0">
+      <button class="calc-btn" onclick="calcCarbon()">계산</button>
+    </div>
+    <div class="calc-result" id="carbon-result"></div>
+  </div>
+
+  <!-- 내 포인트 추가 -->
+  <div class="tool-section">
+    <div class="tool-section-title">📍 내 포인트 추가</div>
+    <div class="custom-spot-grid">
+      <input class="csi full" id="cs-name" type="text" placeholder="포인트명 *">
+      <input class="csi" id="cs-lat" type="number" step="0.001" placeholder="위도 (예: 36.172)">
+      <input class="csi" id="cs-lng" type="number" step="0.001" placeholder="경도 (예: 129.387)">
+      <input class="csi" id="cs-fish" type="text" placeholder="주요 어종">
+      <input class="csi" id="cs-memo" type="text" placeholder="메모">
+      <button class="cs-add-btn" onclick="addCustomSpot()">➕ 포인트 추가</button>
+    </div>
+    <div class="cs-list" id="cs-list"></div>
+  </div>
+</div>
+
+<!-- ══ 포인트 메모 모달 ══ -->
+<div class="note-modal-overlay" id="note-modal">
+  <div class="note-sheet">
+    <div class="note-title" id="note-modal-title">📝 메모</div>
+    <textarea class="note-textarea" id="note-textarea" placeholder="이 포인트에 대한 메모를 입력하세요.
+예) 외항 북쪽 테트라포드 끝 — 만조 전후 30분이 황금타임"></textarea>
+    <div class="note-btn-row">
+      <button class="note-save-btn" onclick="saveNote()">💾 저장</button>
+      <button class="note-del-btn" onclick="deleteNote()">🗑 삭제</button>
+      <button class="note-close-btn" onclick="closeNote()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- PWA 설치 안내 FAB + 모달 -->
+<button id="install-fab" onclick="showInstall()" style="display:none">📲 앱으로 추가</button>
+
+<div id="install-guide" role="dialog" aria-modal="true">
+  <div class="ig-sheet">
+    <div class="ig-title">📲 홈 화면에 앱으로 추가</div>
+    <div class="ig-sub">설치 후 앱처럼 전체화면으로 실행됩니다</div>
+    <div class="ig-tab-row">
+      <div class="ig-tab active" id="ig-android-tab" onclick="igSwitch('android')">🤖 Android (Chrome)</div>
+      <div class="ig-tab" id="ig-ios-tab" onclick="igSwitch('ios')">🍎 iPhone (Safari)</div>
+    </div>
+    <div id="ig-android">
+      <div class="ig-step"><div class="ig-num">1</div><div class="ig-step-body">Chrome 주소창 오른쪽 <strong>⋮ (메뉴)</strong> 버튼을 탭하세요</div></div>
+      <div class="ig-step"><div class="ig-num">2</div><div class="ig-step-body"><strong>"홈 화면에 추가"</strong> 또는 <strong>"앱 설치"</strong> 를 선택하세요</div></div>
+      <div class="ig-step"><div class="ig-num">3</div><div class="ig-step-body">이름 확인 후 <strong>"설치"</strong> / <strong>"추가"</strong> 를 탭하면 완료!</div></div>
+      <div class="ig-step"><div class="ig-num">💡</div><div class="ig-step-body">또는 아래 <strong>Chrome 설치 안내</strong> 버튼이 뜨면 바로 탭하세요</div></div>
+    </div>
+    <div id="ig-ios" style="display:none">
+      <div class="ig-step"><div class="ig-num">1</div><div class="ig-step-body">반드시 <strong>Safari</strong> 로 열어주세요 (Chrome·네이버앱 불가)</div></div>
+      <div class="ig-step"><div class="ig-num">2</div><div class="ig-step-body">하단 <strong>공유 버튼 (□↑)</strong> 을 탭하세요</div></div>
+      <div class="ig-step"><div class="ig-num">3</div><div class="ig-step-body">스크롤해서 <strong>"홈 화면에 추가"</strong> 를 탭하세요</div></div>
+      <div class="ig-step"><div class="ig-num">4</div><div class="ig-step-body">이름 확인 후 오른쪽 위 <strong>"추가"</strong> 를 탭하면 완료!</div></div>
+    </div>
+    <button class="ig-close" onclick="closeGuide()">닫기</button>
+  </div>
+</div>
+
+<!-- 날짜 선택 캘린더 오버레이 -->
+<div class="cal-overlay" id="cal-overlay" onclick="if(event.target===this)closeCalendar()">
+  <div class="cal-panel">
+    <div class="cal-handle"></div>
+    <div class="cal-header">
+      <button class="cal-nav" onclick="calNav(-1)">◀</button>
+      <span class="cal-month-label" id="cal-month-label"></span>
+      <button class="cal-nav" onclick="calNav(1)">▶</button>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="cal-close-row">
+      <button class="cal-today-btn" onclick="selectCalDay(0)">오늘로</button>
+      <button class="cal-close-btn" onclick="closeCalendar()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+
+// ══ 낚시 포인트 데이터 ═══════════════════════════════
+const SPOTS = [
+  {id:0,region:'pohang',num:'①',name:'도구해수욕장',
+   addr:'경북 포항시 북구 흥해읍 도구리',lat:36.158,lng:129.383,
+   fish:['광어','보리멸'],gear:'지그헤드 웜, 서프 미노우',terrain:'모래+암초 혼합',
+   timeSlots:['dawn','day'],
+   timing:'🌅 새벽 4~8시 ★광어 피크 (들물 시작 1~2시간 집중) / ☀️ 오전 8시~오후 2시 보리멸 활성',
+   tip:'백사장 끝단 암초 경계 서프캐스팅 공략',star:false},
+
+  {id:1,region:'pohang',num:'②',name:'칠포해변 & 칠포방파제',
+   addr:'경북 포항시 북구 흥해읍 칠포리 / 칠포1리',lat:36.172,lng:129.387,
+   fish:['광어','농어','전갱이','양태','보리멸'],gear:'미노우 12~14cm, 메탈지그 20~40g, 지그헤드 웜',terrain:'모래해변+방파제',
+   timeSlots:['night','dawn','day'],
+   timing:'🌙 밤 10시~새벽 3시 ★농어 피크 (방파제 외항) / 🌅 새벽 4~7시 광어·전갱이 / ☀️ 오전 보리멸·양태',
+   tip:'방파제 외항 중간~끝단 = 미터급 농어. 새벽 3시~일출 또는 오후 7시 이후 공략',star:true},
+
+  {id:2,region:'pohang',num:'③',name:'오도리 방파제',
+   addr:'경북 포항시 북구 흥해읍 오도리 330',lat:36.185,lng:129.385,
+   fish:['농어','볼락'],gear:'싱킹 미노우, 펜슬베이트',terrain:'방파제+갯바위',
+   timeSlots:['night'],
+   timing:'🌙 밤 8시~자정 ★볼락 피크 (항등 아래 집결) / 🌙 밤 10시~새벽 3시 ★농어 피크',
+   tip:'외항 맞은편 큰 갯바위 — 방파제↔갯바위 사이 구간 집중',star:false},
+
+  {id:3,region:'pohang',num:'④',name:'이가리방파제',
+   addr:'경북 포항시 북구 청하면 이가리',lat:36.224,lng:129.376,
+   fish:['볼락','농어','광어'],gear:'웜, 지그헤드, 싱킹 미노우',terrain:'방파제+암반',
+   timeSlots:['night','dawn'],
+   timing:'🌙 밤 8시~자정 ★볼락·농어 피크 / 🌅 새벽 4~7시 광어 활성',
+   tip:'규모 큰 방파제 + 주변 암반, 바닥층 집중 공략',star:false},
+
+  {id:4,region:'pohang',num:'⑤',name:'월포해수욕장 & 월포항',
+   addr:'경북 포항시 북구 청하면 월포리',lat:36.240,lng:129.371,
+   fish:['광어','농어'],gear:'지그헤드+웜, 플로팅 미노우',terrain:'채석장 인근 (수심 8~10m)',
+   timeSlots:['dawn','night'],
+   timing:'🌅 새벽 4~8시 ★광어 최우선 피크 (들물 타임) / 🌙 밤 10시~새벽 2시 ★농어 피크',
+   tip:'채석장 부근 펄+조개껍질 혼합 바닥 = 광어 서식 최적. 동해안 광어 워킹 루어 대표 포인트',star:true},
+
+  {id:5,region:'pohang',num:'⑥',name:'화진해수욕장 & 방석방파제',
+   addr:'경북 포항시 북구 송라면 화진리',lat:36.277,lng:129.366,
+   fish:['농어','황점볼락','광어'],gear:'웜, 지그헤드',terrain:'방파제+해초 지형',
+   timeSlots:['night','dawn'],
+   timing:'🌙 밤 8시~새벽 2시 ★농어·볼락 동시 피크 / 🌅 새벽 4~7시 광어 활성',
+   tip:'방파제 외항 바닥층, 조류 소통 우수 · 해초 무성한 지형',star:false},
+
+  {id:6,region:'pohang',num:'⑦',name:'석병리 방파제 (1리·2리)',
+   addr:'경북 포항시 북구 송라면 석병리 일대',lat:36.291,lng:129.362,
+   fish:['성대','도다리','광어','삼치'],gear:'크롬메탈지그(삼치), 지그헤드 웜(성대·광어)',terrain:'방파제+모래해변',
+   timeSlots:['dawn','day'],
+   timing:'🌅 새벽~오전 7시 삼치 / 🌅 새벽 4~7시 광어 / ☀️ 오전 8시~오후 2시 ★성대·도다리 피크',
+   tip:'80cm+ 대삼치 명소. 8월은 광어·성대 중심 / 대삼치 피크는 10월 하순~11월',star:false},
+
+  {id:7,region:'pohang',num:'⑧',name:'조사리해수욕장 & 방파제',
+   addr:'경북 포항시 북구 송라면 조사리 일대',lat:36.303,lng:129.358,
+   fish:['삼치','광어','성대','양태'],gear:'크롬메탈지그, 메탈지그',terrain:'갯바위+방파제',
+   timeSlots:['dawn','day'],
+   timing:'🌅 새벽~오전 7시 ★삼치 피크 (표층 베이트 추격) / 🌅 새벽 4~7시 광어 / ☀️ 오전~오후 성대·양태',
+   tip:'갯바위에서 크롬메탈 루어 원투 = 삼치 포인트. 갯바위 접근 시 웨이더 착용 권장',star:false},
+
+  {id:8,region:'yeongdeok',num:'⑨',name:'강구항 (오십천 기수역)',
+   addr:'경북 영덕군 강구면 강구리 253-51',lat:36.347,lng:129.373,
+   fish:['농어','볼락','전갱이','우럭'],gear:'소형 미노우, 싱킹 미노우',terrain:'기수역(민물+바닷물 합류)',
+   timeSlots:['night'],
+   timing:'🌙 밤 10시~새벽 3시 ★농어 피크 (만조 전후 기수역 집결) / 🌙 밤 8시~자정 볼락·전갱이',
+   tip:'오십천+바다 합류 기수역 = 야간 농어 루어낚시 명소. 만조 전후 집중',star:true},
+
+  {id:9,region:'yeongdeok',num:'⑩',name:'경정2리 방파제 (축산항 인근)',
+   addr:'경북 영덕군 축산면 축산항5길 일대',lat:36.422,lng:129.406,
+   fish:['광어','농어','감성돔','볼락','무늬오징어','도다리'],gear:'지그헤드 웜, 미노우, 에기',terrain:'방파제+복잡한 해안선',
+   timeSlots:['dawn','night'],
+   timing:'🌅 새벽 4~8시 ★광어·도다리 피크 / 🌙 밤 7시~자정 ★무늬오징어·볼락·농어·감성돔 동반 피크',
+   tip:'광어·농어 복합 포인트, 다어종 서식. 가족 단위 낚시도 적합',star:true},
+
+  {id:10,region:'yeongdeok',num:'⑪',name:'장사해수욕장',
+   addr:'경북 영덕군 남정면 장사리 74-6',lat:36.319,lng:129.367,
+   fish:['광어','삼치'],gear:'서프루어, 지그헤드 웜, 메탈지그',terrain:'모래해변+갯바위',
+   timeSlots:['dawn'],
+   timing:'🌅 새벽~오전 7시 ★삼치·광어 동시 피크 (일출 전후 1시간이 핵심)',
+   tip:'해변 양쪽 갯바위 인근 서프루어 광어 / 쇼어지깅 삼치',star:false},
+
+  {id:11,region:'yeongdeok',num:'⑫',name:'대진해수욕장 & 대진항',
+   addr:'경북 영덕군 영해면 영덕대게로 2840 (대진리)',lat:36.500,lng:129.411,
+   fish:['광어','농어','보리멸','무늬오징어','볼락'],gear:'서프 지그헤드 웜, 에기 2.5~3.5호, 싱킹 미노우',terrain:'기수역+갯바위',
+   timeSlots:['dawn','day','night'],
+   timing:'🌅 새벽 4~8시 ★광어 최다 개체 피크 / ☀️ 오전~오후 보리멸 / 🌙 밤 7시~자정 ★무늬오징어·볼락·농어',
+   tip:'송천(민물)+바다 합류 = 광어 개체수 압도적으로 풍부. 남단 갯바위 = 무늬오징어·볼락',star:true},
+
+  {id:12,region:'yeongdeok',num:'⑬',name:'고래불해수욕장 & 병곡방파제',
+   addr:'경북 영덕군 병곡면 고래불로 394',lat:36.527,lng:129.416,
+   fish:['광어','삼치','우럭','볼락','도다리'],gear:'서프 루어, 쇼어 지깅 메탈지그',terrain:'백사장+방파제',
+   timeSlots:['dawn','night'],
+   timing:'🌅 새벽~오전 7시 삼치·광어 / 🌙 밤 8시~자정 ★볼락·우럭 방파제 야간 피크',
+   tip:'병곡방파제 인근 + 넓은 백사장 전면 모래지형 서프 공략',star:false},
+
+  {id:13,region:'uljin',num:'⑭',name:'평해해수욕장',
+   addr:'경북 울진군 평해읍 월송리 319-2',lat:36.672,lng:129.419,
+   fish:['광어'],gear:'서프 지그헤드 웜, 서프 미노우',terrain:'넓은 모래해변',
+   timeSlots:['dawn'],
+   timing:'🌅 새벽 4시~오전 9시 ★광어 피크 (들물 시작 후 1~2시간이 핵심) / 오전 9시 이후 급감',
+   tip:'웨이더 착용 후 물골(브레이크 라인) 집중 공략 — 동해안 서프 광어 대표 명소',star:false},
+
+
+  {id:15,region:'uljin',num:'⑯',name:'기성망양 & 구산항 빨간등대',
+   addr:'경북 울진군 기성면 구산봉산로 126-4',lat:36.785,lng:129.466,
+   fish:['광어(대형)','노래미','가자미'],gear:'지그헤드 웜, 플로팅 미노우',terrain:'방파제+모래+수초',
+   timeSlots:['dawn','day'],
+   timing:'🌅 새벽 4~8시 ★대형 광어 최우선 피크 / ☀️ 오전~오후 노래미·가자미 바닥층 활성',
+   tip:'구산항 빨간 등대 외항 = 대형 광어 최우선 포인트 ★',star:true},
+
+  {id:16,region:'uljin',num:'⑰',name:'죽변항 방파제 (대·소)',
+   addr:'경북 울진군 죽변면 죽변항길 231',lat:36.982,lng:129.416,
+   fish:['광어','삼치','고등어','농어','벵에돔','무늬오징어'],gear:'메탈지그, 싱킹 미노우, 에기',terrain:'방파제 (수심 9~12m)',
+   timeSlots:['dawn','night'],
+   timing:'🌅 일출 전후 1~2시간 ★삼치·고등어 최고 피크 / 🌅 새벽 4~7시 광어 / 🌙 밤 8시~자정 ★무늬오징어·농어',
+   tip:'아침 일출 전후 1~2시간 = 삼치 골든타임. 소형 방파제 = 가을 삼치·고등어 떼낚시',star:true},
+
+  {id:17,region:'uljin',num:'⑱',name:'오산항',
+   addr:'경북 울진군 매화면 오산항길 59',lat:37.036,lng:129.414,
+   fish:['광어','가자미','우럭'],gear:'다운샷 리그, 지그헤드 웜',terrain:'방파제 (수심 6~10m)',
+   timeSlots:['dawn','night'],
+   timing:'🌅 새벽 4~8시 ★광어·가자미 피크 / 🌙 밤 9시~자정 우럭 바닥층 야간 활성',
+   tip:'웜을 바닥에서 천천히 끌거나 흔들어주는 액션',star:false},
+
+  {id:18,region:'uljin',num:'⑲',name:'수산항 (울진읍)',
+   addr:'경북 울진군 울진읍 수산리 일대',lat:36.992,lng:129.411,
+   fish:['광어','우럭'],gear:'플로팅 미노우, 지그헤드 웜',terrain:'방파제+모래 바닥',
+   timeSlots:['dawn','night'],
+   timing:'🌅 새벽 4~8시 ★광어 피크 / 🌙 밤 9시~자정 우럭 야간 활성',
+   tip:'소규모 항 — 조용하고 접근성 양호. 외항 모래 바닥 지형 광어 공략',star:false},
+
+  {id:19,region:'goseong',num:'⑳',name:'고성 공현진항 & 봉포항',
+   addr:'강원 고성군 죽왕면 공현진리 일대',lat:38.260,lng:128.576,
+   fish:['임연수어','볼락','가자미','고등어'],gear:'웜, 지그헤드, 스킨 다운샷, 사비키',terrain:'방파제+암초 (수심 10~15m)',
+   timeSlots:['dawn','night'],
+   timing:'🌅 새벽~오전 7시 ★임연수어 피크 / 🌙 밤 8시~자정 볼락·고등어 집어등 공략',
+   tip:'동해 최북단 루어 포인트. 가을 임연수어 시즌(9~11월) 으뜸. 수온 16°C 이하부터 활성',star:false},
+
+  {id:20,region:'sokcho',num:'㉑',name:'속초 영금정 & 대포항',
+   addr:'강원 속초시 영금정로 3 일대',lat:38.207,lng:128.591,
+   fish:['임연수어','볼락','노래미','고등어'],gear:'웜, 소형 지그, 사비키',terrain:'암초·수중여 발달 갯바위',
+   timeSlots:['night','dawn'],
+   timing:'🌙 밤 8시~자정 ★볼락·임연수어 피크 (영금정 암초 주변) / 🌅 새벽 4~7시 고등어·노래미',
+   tip:'영금정 갯바위 = 수중여 발달 최우수 볼락 포인트. 가을 임연수어 명소. 속초 시내 5분',star:false},
+
+  {id:21,region:'gangneung',num:'㉒',name:'강릉 안목항 & 경포항',
+   addr:'강원 강릉시 창해로14번길 일대',lat:37.780,lng:128.957,
+   fish:['볼락','도루묵','감성돔','전갱이'],gear:'지그헤드, 웜, 집어등 채비',terrain:'방파제·내항 (수심 5~12m)',
+   timeSlots:['night'],
+   timing:'🌙 밤 8시~자정 ★볼락·전갱이 피크 (항등 불빛 집어) / 🌙 야간 감성돔·도루묵 (11~3월 성수기)',
+   tip:'강릉 커피거리 인근 접근성 최상. 내항 불빛 아래 볼락·전갱이 집어. 겨울 도루묵 1번지',star:false},
+
+  {id:22,region:'samcheok',num:'㉓',name:'삼척 정라항 & 삼척항',
+   addr:'강원 삼척시 수로항길 일대',lat:37.450,lng:129.165,
+   fish:['도루묵','가자미','광어','우럭'],gear:'삼봉채비(도루묵), 다운샷 웜',terrain:'방파제·모래 바닥 (수심 10~18m)',
+   timeSlots:['night','dawn'],
+   timing:'🌙 야간 ★도루묵 피크 (11~12월 야광 삼봉채비) / 🌅 새벽 4~8시 광어·가자미',
+   tip:'동해 도루묵 1번지. 11~12월 야간 활성 최상. 야광 집어장치 추가 효과적',star:false},
+
+  {id:23,region:'samcheok',num:'㉔',name:'삼척 임원항 대왕바위',
+   addr:'강원 삼척시 원덕읍 임원리 일대',lat:37.327,lng:129.244,
+   fish:['감성돔','벵에돔','볼락','노래미'],gear:'막대찌 1~2호, 크릴·갯지렁이',terrain:'갯바위·암반 (수심 3~10m)',
+   timeSlots:['dawn','day'],
+   timing:'🌅 새벽~오전 ★감성돔·벵에돔 피크 (파도 있는 날 활성) / ☀️ 오전~오후 볼락·노래미',
+   tip:'동해 감성돔 명소. 임원항 남쪽 대왕바위 갯바위 집중. 10월~이듬해 5월 시즌',star:true},
+
+  {id:24,region:'uljin',num:'㉕',name:'왕돌초 선상 (구산항 출발)',
+   addr:'경북 울진군 기성면 구산봉산로 → 왕돌초 (해상 50~80분)',lat:36.870,lng:130.030,
+   fish:['방어','부시리','참다랑어','한치'],gear:'슬로우지그 130~160g, 이카메탈',terrain:'암초 근해 (수심 30~80m)',
+   timeSlots:['dawn','day'],
+   timing:'🌅 새벽 출항 → 오전 방어·부시리 활성 피크 / ☀️ 낮 한치 (5~6월)',
+   tip:'동해 최고 선상낚시 포인트. 방어 9~11월 피크, 한치 5~6월. 개인 약 12만원. 예약 필수',star:true},
+
+  /* ── 서해 포인트 ── */
+  {id:25,region:'incheon',num:'㉖',name:'영흥도 진두선착장 & 갯바위',
+   addr:'인천 옹진군 영흥면 내리 일대',lat:37.237,lng:126.491,
+   fish:['우럭','광어','감성돔','삼치','주꾸미'],gear:'원투낚시, 지그헤드+웜, 에기',terrain:'방파제+갯바위 (수심 2~5m)',
+   timeSlots:['dawn','day'],
+   timing:'🌅 봄~여름 우럭·광어·삼치 / 가을(9~10월) 주꾸미·갑오징어 마릿수',
+   tip:'서해 서울근교 대표 포인트. 사리물때 전후 조과 최상. 초보자·가족 낚시 추천',star:false},
+
+  {id:26,region:'incheon',num:'㉗',name:'대연평도 구리포 갯바위',
+   addr:'인천 옹진군 연평면 연평리 일대',lat:37.668,lng:125.720,
+   fish:['점농어','감성돔'],gear:'싱킹 미노우, 10ft 전용대',terrain:'갯바위 (간조 수위 140cm 이하)',
+   timeSlots:['dawn','day'],
+   timing:'🌅 5~6월 점농어 피크 / 간조 수위 140cm 이하인 날 집중',
+   tip:'90~110cm 점농어 전국 최고 포인트. 야간낚시 금지. 선박으로만 접근. 코리아킹호 운항',star:true},
+
+  {id:27,region:'dangjin',num:'㉘',name:'석문방조제 (충남 당진)',
+   addr:'충남 당진시 송산면 석문방조제 일대',lat:36.980,lng:126.606,
+   fish:['광어','우럭','삼치'],gear:'원투낚시, 지그헤드+웜',terrain:'방조제 연안 (사리 간조 최적)',
+   timeSlots:['dawn','day'],
+   timing:'🌅 사리물때 간조~끝날물 집중 / 9~11월 광어 피크',
+   tip:'서해 광어 대표 방조제 포인트. 조금물때 비추. 수원·서울에서 1~1.5시간. 주차 편리',star:false},
+
+  {id:28,region:'hongseong',num:'㉙',name:'홍성 남당항 (쭈꾸미·갑오징어)',
+   addr:'충남 홍성군 서부면 남당리 일대',lat:36.515,lng:126.490,
+   fish:['쭈꾸미','갑오징어'],gear:'에기 1.8~2.5호, 봉돌 선상채비',terrain:'방파제+근해 선상',
+   timeSlots:['dawn','day'],
+   timing:'☀️ 9월 금어기 해제 직후 마릿수 폭발 / 봄(3~4월) 갑오징어',
+   tip:'서해 쭈꾸미 최대 명소. 사리~중간물 최우수. 금어기 해제 후 3주가 골든타임',star:true},
+
+  {id:29,region:'taean',num:'㉚',name:'태안 신진항·안흥항 선상',
+   addr:'충남 태안군 근흥면 신진도리 일대',lat:36.805,lng:126.135,
+   fish:['쭈꾸미','갑오징어','학꽁치'],gear:'선상 에기 1.8~2.5호, 찌낚시',terrain:'근해 선상 (수심 10~20m)',
+   timeSlots:['dawn','day'],
+   timing:'☀️ 봄(3~4월) 갑오징어 선상 / 가을(9~10월) 쭈꾸미 선상',
+   tip:'태안반도 대표 선상 포인트. 신진항·안흥항 다수 출항. 갑오징어·쭈꾸미 전국 최고급',star:false},
+
+  {id:30,region:'buan',num:'㉛',name:'격포항 & 왕등도 갯바위 (전북 부안)',
+   addr:'전북 부안군 변산면 격포리 일대',lat:35.617,lng:126.500,
+   fish:['돌돔','감성돔','참돔'],gear:'참갯지렁이·크릴, 참돔바늘 15호, 카본 3호',terrain:'갯바위·도서 (왕등도 격포에서 50분)',
+   timeSlots:['dawn','day'],
+   timing:'🌅 5월 중순 이후 ~ 가을 돌돔·감성돔 피크 / 새벽 출항 집중',
+   tip:'56cm급 대물 돌돔 명소. 서해 최고 갯바위 원정 포인트. 숙련자 권장',star:true},
+
+  {id:31,region:'gunsan',num:'㉜',name:'군산 장자도·새만금방조제',
+   addr:'전북 군산시 옥도면 장자도 일대',lat:35.994,lng:126.472,
+   fish:['갈치','농어','학꽁치'],gear:'수직지깅, 루어 미노우, 민장대',terrain:'방조제+도서 연안',
+   timeSlots:['night','day'],
+   timing:'🌙 가을 야간 갈치 마릿수 / ☀️ 방조제 농어 루어 봄~여름',
+   tip:'장자도 워킹 루어, 새만금방조제 야간낚시. 가을 갈치·풀치 전국 최고 마릿수',star:false},
+
+  /* ── 남해 포인트 ── */
+  {id:32,region:'busan',num:'㉝',name:'기장 문중·한국유리방파제 (부산)',
+   addr:'부산 기장군 기장읍 문중리 일대',lat:35.244,lng:129.215,
+   fish:['무늬오징어','감성돔','볼락','농어'],gear:'에기 2.5~3.5호, 웜, 찌낚시',terrain:'방파제+갯바위 (수심 5~15m)',
+   timeSlots:['night','dawn'],
+   timing:'🌙 야간 만조 전후 ★무늬오징어 피크 (5~6월) / 🌅 새벽 감성돔·볼락',
+   tip:'5~6월 킬로급 무늬오징어 전국 최고 에깅 포인트. 야간 만조 집중. 6월 이후 거제·포항으로 이동',star:true},
+
+  {id:33,region:'busan',num:'㉞',name:'부산 남항 선상 (한치)',
+   addr:'부산 서구 남부민동 남항 일대',lat:35.093,lng:129.027,
+   fish:['한치','갈치','방어'],gear:'이카메탈, 오모리그, 수직지깅',terrain:'근해 선상 (수심 40m)',
+   timeSlots:['night'],
+   timing:'🌙 집어등 야간 오후 7:30~새벽 3:00 / 봄(4~5월) 한치 피크',
+   tip:'남항 출발 선상. 봄 한치 대표 포인트. 야간 집어등 집어 필수. 이카메탈 채비',star:false},
+
+  {id:34,region:'yeosu',num:'㉟',name:'여수 금오도·돌산도',
+   addr:'전남 여수시 돌산읍 일대',lat:34.627,lng:127.738,
+   fish:['감성돔','갈치','전갱이','벵에돔'],gear:'릴찌낚시, 민장대, 원투낚시',terrain:'갯바위+방파제 복합',
+   timeSlots:['dawn','day'],
+   timing:'🌅 봄·가을 감성돔 시즌 / 🌙 야간 갈치 지깅 가을',
+   tip:'남해 대표 감성돔 명소. 금오도 갯바위, 돌산도 방파제 복합. 봄(4~5월)·가을(9~10월) 피크',star:false},
+
+  {id:35,region:'tongyeong',num:'㊱',name:'통영 욕지도·비진도 선상',
+   addr:'경남 통영시 욕지면 일대',lat:34.726,lng:128.383,
+   fish:['감성돔','참돔','갑오징어','벵에돔'],gear:'타이라바, 릴찌낚시',terrain:'도서 갯바위+선상 (수심 30~60m)',
+   timeSlots:['dawn','day'],
+   timing:'🌅 봄·가을 감성돔·참돔 선상 타이라바 / ☀️ 여름 갑오징어·벵에돔',
+   tip:'욕지도·비진도 선상 타이라바 참돔 명소. 중~고급자 권장. 연중 꾸준한 조과',star:false},
+
+  {id:36,region:'wando',num:'㊲',name:'완도 선상 빅게임 (부시리·방어)',
+   addr:'전남 완도군 완도읍 일대 → 근해 출항',lat:34.314,lng:126.726,
+   fish:['부시리','방어','문어','참돔'],gear:'메탈지그 40~100g, 타이라바',terrain:'근해 선상 (수심 30~80m)',
+   timeSlots:['dawn','day'],
+   timing:'🌅 가을(9~11월) 부시리·방어 빅게임 피크 / ☀️ 연중 문어 선상',
+   tip:'가을 대형 부시리·방어 빅게임 전국 최고급 포인트. 예약 필수. 씨알 최대 15kg+',star:true},
+
+  {id:37,region:'geoje',num:'㊳',name:'거제도 구조라방파제 (경남)',
+   addr:'경남 거제시 일운면 구조라리 일대',lat:34.790,lng:128.690,
+   fish:['감성돔','무늬오징어','볼락','전갱이','학꽁치'],gear:'찌낚시, 에기, 루어',terrain:'방파제 (발판 안전, 초보자 적합)',
+   timeSlots:['dawn','day','night'],
+   timing:'🌅 봄·가을 감성돔 / 🌙 야간 무늬오징어·볼락 에깅 / ☀️ 전갱이·학꽁치 마릿수',
+   tip:'발판 안전, 가족 낚시 추천. 해질 무렵 입질 활발. 거제 대표 접근성 최상 포인트',star:false},
+
+  {id:38,region:'haenam',num:'㊴',name:'전남 해창만 (주꾸미·갑오징어)',
+   addr:'전남 해남군 해남읍 일대 해창만',lat:34.554,lng:126.580,
+   fish:['주꾸미','갑오징어'],gear:'에기 1.8~2.5호, 선상채비',terrain:'연안 갯벌+방파제',
+   timeSlots:['day'],
+   timing:'☀️ 9~10월 금어기 해제 후 마릿수 최고 / 사리~중간물 조류 빠른 타이밍',
+   tip:'주꾸미·갑오징어 서남해 대표 포인트. 금어기 해제(9월 초) 직후 3주가 피크',star:false},
+
+  /* ── 제주 포인트 ── */
+  {id:39,region:'jeju',num:'㊵',name:'차귀도 (제주 서부)',
+   addr:'제주 제주시 한경면 노을해안로 일대 (배 10분)',lat:33.310,lng:126.153,
+   fish:['참돔','벵에돔','방어','돌돔','감성돔'],gear:'갯바위 찌낚시, 선상 지깅',terrain:'갯바위+도서 (수심 10~60m)',
+   timeSlots:['dawn','day'],
+   timing:'🌅 여름: 참돔·돌돔 / 가을: 방어·감성돔·벵에돔 피크 / 겨울: 대형 방어',
+   tip:'낚시 시즌이 연중 길고 대물 다수. 제주 대표 갯바위·선상 명소. 초보부터 전문가까지',star:true},
+
+  {id:40,region:'jeju',num:'㊶',name:'마라도 (제주 최남단)',
+   addr:'제주 서귀포시 대정읍 마라리 (운진항 출발 30분)',lat:33.117,lng:126.267,
+   fish:['참돔','부시리','방어','벵에돔'],gear:'선상 지깅, 릴찌낚시',terrain:'최남단 갯바위+선상',
+   timeSlots:['dawn','day'],
+   timing:'🌅 봄~가을 참돔·부시리 / 겨울 대형 방어 피크',
+   tip:'한국 최남단 원정 포인트. 대물 기대 최고. 날씨 악화 시 출항 취소 잦음. 고급 권장',star:true},
+
+  {id:41,region:'jeju',num:'㊷',name:'서귀포 문섬·섶섬 선상',
+   addr:'제주 서귀포시 서귀동 일대 (서귀포항 출발)',lat:33.232,lng:126.561,
+   fish:['참돔','부시리','삼치','벵에돔'],gear:'타이라바, 선상 지깅, 릴찌',terrain:'도서 선상+갯바위',
+   timeSlots:['dawn','day'],
+   timing:'🌅 봄·가을 참돔·부시리 피크 / 여름 삼치·전갱이',
+   tip:'서귀포 문섬·섶섬 주변. 선상 타이라바·지깅. 제주 남부 피싱 존. 연중 운항',star:false},
+
+  {id:42,region:'jeju',num:'㊸',name:'한림 비양도 (제주 북서)',
+   addr:'제주 제주시 한림읍 한림항 → 비양도 (배 15분)',lat:33.413,lng:126.243,
+   fish:['무늬오징어','벵에돔','농어','학꽁치'],gear:'에깅, 릴찌낚시',terrain:'도서 방파제+갯바위',
+   timeSlots:['night','dawn'],
+   timing:'🌙 야간 만조 무늬오징어 에깅 피크 (5~6월) / 🌅 새벽 벵에돔·농어',
+   tip:'5~6월 무늬오징어 에깅 제주 최고 포인트. 한림항에서 15분. 벵에돔·농어 겨울 피크',star:false},
+
+  {id:43,region:'jeju',num:'㊹',name:'추자도 갯바위 (제주 북쪽)',
+   addr:'제주 제주시 추자면 대서리 일대 (제주항 북쪽 1시간)',lat:33.957,lng:126.885,
+   fish:['감성돔','벵에돔','참돔','돌돔','무늬오징어'],gear:'릴찌낚시, 찌낚시, 에기',terrain:'도서 갯바위+방파제',
+   timeSlots:['dawn','day'],
+   timing:'🌅 연중 감성돔·벵에돔 / 봄·가을 참돔·돌돔 피크',
+   tip:'제주 최고 갯바위 원정 포인트. 감성돔·벵에돔 씨알 압도적. 중~고급자 권장',star:true},
+];
+
+const RESTS=[];
+
+// ══ 색상 유틸 ═══════════════════════════════════════
+const COLORS = {
+  /* 동해 */ goseong:'#00838f', sokcho:'#2e7d32', gangneung:'#01579b', samcheok:'#4527a0',
+             pohang:'#1a73e8', yeongdeok:'#0f9d58', uljin:'#f4511e',
+  /* 서해 */ incheon:'#0097a7', dangjin:'#006064', hongseong:'#00acc1',
+             taean:'#0288d1', buan:'#1565c0', gunsan:'#37474f',
+  /* 남해 */ busan:'#880e4f', yeosu:'#6a1b9a', tongyeong:'#c2185b',
+             wando:'#4a148c', geoje:'#d81b60', haenam:'#b71c1c',
+  /* 제주 */ jeju:'#f57c00',
+  rest:'#9c27b0'
+};
+
+// ══ 기상청 API 설정 ══════════════════════════════════
+// apihub.kma.go.kr 에서 발급받은 인증키 입력
+const KMA_AUTH_KEY = ''; // Worker 환경변수로 이동 — HTML 소스에 노출 금지
+// ══ Cloudflare Worker URL ══════════════════════════════
+// 배포 후 여기에 Worker URL 입력 (예: https://fishing-proxy.이름.workers.dev)
+// 비워두면 기존 방식(Open-Meteo)으로 동작
+const WORKER_URL = 'https://fishing-proxy.rkdrlgns0308.workers.dev';
+// 기상청 해양기상부이 관측소 ID 매핑 (동해안)
+const KMA_MARINE_STN = {
+  goseong:22305, sokcho:22305, yangyang:22305, gangneung:22105,
+  donghae:22105, samcheok:22105, uljin:22190, yeongdeok:22302,
+  pohang:22106, ulsan:22189, busan:22189, ulleung:22105
+};
+const RNAMES = {
+  /* 동해 */ goseong:'고성', sokcho:'속초', gangneung:'강릉', samcheok:'삼척',
+             pohang:'포항', yeongdeok:'영덕', uljin:'울진',
+  /* 서해 */ incheon:'인천', dangjin:'당진', hongseong:'홍성',
+             taean:'태안', buan:'부안', gunsan:'군산',
+  /* 남해 */ busan:'부산', yeosu:'여수', tongyeong:'통영',
+             wando:'완도', geoje:'거제', haenam:'해남',
+  /* 제주 */ jeju:'제주'
+};
+
+// 지역 → 바다 매핑
+const REGION_SEA = {
+  goseong:'east', sokcho:'east', gangneung:'east', samcheok:'east',
+  pohang:'east', yeongdeok:'east', uljin:'east',
+  incheon:'west', dangjin:'west', hongseong:'west', taean:'west', buan:'west', gunsan:'west',
+  busan:'south', yeosu:'south', tongyeong:'south', wando:'south', geoje:'south', haenam:'south',
+  jeju:'jeju'
+};
+
+const SPECIES_INFO={
+  // ※ 금어기는 수산자원관리법 시행령 기준 (2025~2026). 지자체 별도 조례 가능. 출처: mof.go.kr
+  '광어':{icon:'🐟',temp:'16~20°C',ban:'없음',banClr:'#2e7d32',banMonths:[],size:'35cm',peak:'6~9월',
+    note:'모래·조개껍질 바닥층 서프/바텀 루어',
+    habitat:'모래바닥 5~30m. 동해 서프(포항·영덕), 서해 방조제(석문·태안)',color:'#1565c0'},
+  '농어':{icon:'🐟',temp:'18~24°C',ban:'없음',banClr:'#2e7d32',banMonths:[],size:'30cm',peak:'5~9월',
+    note:'기수역·방파제 외항 야간 싱킹 미노우',
+    habitat:'기수역(민물+바다 합류)·방파제 외항. 전국 연안. 야간 만조 전후',color:'#00695c'},
+  '삼치':{icon:'🐟',temp:'18~24°C',ban:'5월',banClr:'#c62828',banMonths:[5],size:'없음',peak:'9~11월',
+    note:'표층 빠른 메탈지그 일출 전후 공략',
+    habitat:'표층~10m 연안. 서해(시화방조제)·남해·동해 동시 회유',color:'#e65100'},
+  '볼락':{icon:'🐟',temp:'15~18°C',ban:'없음',banClr:'#2e7d32',banMonths:[],size:'15cm',peak:'11~3월',
+    note:'야간 집어등 아래 항구·방파제 지그헤드',
+    habitat:'전국 연안 20m 이내. 암반·테트라포드 주변. 집어등 아래 집결',color:'#6a1b9a'},
+  '무늬오징어':{icon:'🦑',temp:'17~22°C',ban:'없음',banClr:'#2e7d32',banMonths:[],size:'없음',peak:'5~6월',
+    note:'잘피밭·갯바위 에깅 야간 만조 전후',
+    habitat:'남해(기장·거제)·동해 남부 잘피밭·갯바위. 에깅 야간 전용',color:'#b71c1c'},
+  '방어':{icon:'🐟',temp:'17~22°C',ban:'없음',banClr:'#2e7d32',banMonths:[],size:'30cm',peak:'9~11월',
+    note:'난류성 회유어. 왕돌초·제주 선상 지깅',
+    habitat:'난류 회유어. 동해 왕돌초, 제주 차귀도·마라도, 남해 완도 선상',color:'#e91e63'},
+  '임연수어':{icon:'🐟',temp:'10~16°C',ban:'없음',banClr:'#2e7d32',banMonths:[],size:'없음',peak:'9~11월',
+    note:'동해 북부 냉수 가을 시즌 웜·지그헤드',
+    habitat:'동해 북부 냉수대. 고성·속초·주문진 방파제·방조제',color:'#37474f'},
+  '도루묵':{icon:'🐟',temp:'8~14°C',ban:'없음',banClr:'#2e7d32',banMonths:[],size:'11cm',peak:'11~12월',
+    note:'동해 삼봉채비 야광 야간 낚시',
+    habitat:'동해 연안 수심 5~20m. 삼척·강릉·속초 방파제. 산란기(11~12월) 연안 진입',color:'#5d4037'},
+  '감성돔':{icon:'🐟',temp:'16~24°C',ban:'5월',banClr:'#c62828',banMonths:[5],size:'25cm',peak:'4월·9~10월',
+    note:'갯바위·방파제 바닥층 찌낚시',
+    habitat:'갯바위·방파제 바닥층. 서해(영흥도·왕등도)·남해(여수·통영·거제)·제주·동해',color:'#0288d1'},
+};
+
+// ══ 마커 아이콘 ═════════════════════════════════════
+function makeSpotIcon(region,star){
+  const c=COLORS[region],sz=star?36:30;
+  return L.divIcon({className:'',iconSize:[sz,sz+8],iconAnchor:[sz/2,sz+8],popupAnchor:[0,-sz],
+    html:`<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz+8}">
+      <circle cx="${sz/2}" cy="${sz/2}" r="${sz/2-1}" fill="${c}" stroke="#fff" stroke-width="2.5"/>
+      <text x="${sz/2}" y="${sz/2+5}" text-anchor="middle" fill="#fff" font-size="${star?13:11}" font-weight="bold">${star?'★':'🐟'}</text>
+      <polygon points="${sz/2-5},${sz-2} ${sz/2+5},${sz-2} ${sz/2},${sz+6}" fill="${c}"/>
+    </svg>`});
+}
+
+// ══ 팝업 HTML ═══════════════════════════════════════
+function spotPopup(s){
+  const c=COLORS[s.region];
+  const ft=s.fish.map(f=>`<span class="ptag" style="background:${c}22;color:${c}">${f}</span>`).join('');
+  const nv=`https://map.naver.com/v5/search/${encodeURIComponent(s.addr)}`;
+  const kk=`https://map.kakao.com/link/map/${encodeURIComponent(s.name)},${s.lat},${s.lng}`;
+  return `<div class="popup-header" style="background:${c}">
+      <span>${s.num} ${s.name}</span>${s.star?'<span class="popup-badge">★추천</span>':''}
+    </div>
+    <div class="popup-body">
+      <div class="popup-row"><span class="popup-label" style="background:${c}">주소</span><span class="popup-val">${s.addr}</span></div>
+      <div class="popup-row"><span class="popup-label" style="background:${c}">어종</span><div class="ptags">${ft}</div></div>
+      <div class="popup-row"><span class="popup-label" style="background:${c}">채비</span><span class="popup-val">${s.gear}</span></div>
+      <div class="popup-row"><span class="popup-label" style="background:#388e3c">시간대</span><span class="popup-val" style="font-size:11px;color:#1b5e20">${s.timing}</span></div>
+      <div class="popup-tip">${s.tip}</div>
+    </div>
+    <div class="popup-actions">
+      <a href="${nv}" target="_blank" class="btn-nv">📍 네이버</a>
+      <a href="${kk}" target="_blank" class="btn-kk">🗺 카카오</a>
+      <button class="btn-go" onclick="switchTab('fish');setTimeout(()=>scrollId('fc-${s.id}'),200)">📋 목록</button>
+    </div>`;
+}
+
+// ══ 지도 초기화 ═════════════════════════════════════
+let map,spotMarkers=[],alertLayer=null;
+function initMap(){
+  map=L.map('map').setView([36.2,127.5],7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+  alertLayer=L.layerGroup().addTo(map);
+  SPOTS.forEach(s=>{
+    const m=L.marker([s.lat,s.lng],{icon:makeSpotIcon(s.region,s.star)})
+      .bindPopup(spotPopup(s),{maxWidth:310,minWidth:260}).addTo(map);
+    m.sd=s; spotMarkers.push(m);
+  });
+
+  // 지도 클릭 → 해당 지점 날씨 조회
+  map.on('click',async function(e){
+    if(!clickWxMode) return;
+    const {lat,lng}=e.latlng;
+    const popup=L.popup({maxWidth:295,autoPan:true})
+      .setLatLng(e.latlng)
+      .setContent('<div style="padding:10px;font-size:12px">⏳ 날씨·위치 조회 중...</div>')
+      .openOn(map);
+    try{
+      const safeJson=r=>r.ok?r.json():r.json().catch(()=>null).then(j=>({_err:true,reason:(j&&j.reason)||('HTTP '+r.status)}));
+      const [wxR,marineR,geoR]=await Promise.all([
+        fetch('https://api.open-meteo.com/v1/forecast'
+          +'?latitude='+lat.toFixed(4)+'&longitude='+lng.toFixed(4)
+          +'&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,'
+          +'precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure'
+          +'&wind_speed_unit=ms&timezone=Asia%2FSeoul&forecast_days=16')
+          .then(safeJson).catch(()=>null),
+        fetch('https://marine-api.open-meteo.com/v1/marine'
+          +'?latitude='+lat.toFixed(4)+'&longitude='+lng.toFixed(4)
+          +'&current=wave_height,wave_direction,wave_period,'
+          +'swell_wave_height,swell_wave_direction,swell_wave_period'
+          +'&hourly=wave_height,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,sea_surface_temperature'
+          +'&timezone=Asia%2FSeoul&forecast_days=7')
+          .then(safeJson).catch(()=>null),
+        fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat.toFixed(5)
+          +'&lon='+lng.toFixed(5)+'&format=json&accept-language=ko&zoom=14')
+          .then(r=>r.ok?r.json():null).catch(()=>null),
+      ]);
+      // 해양 API는 내륙 클릭 시 오류 반환 → null 처리
+      const marine=(marineR&&!marineR.error&&!marineR._err)?marineR:null;
+      const addr=geoR?.address||{};
+      const locName=addr.town||addr.village||addr.suburb||addr.quarter
+        ||addr.borough||addr.city_district||addr.city||addr.county
+        ||(lat.toFixed(3)+'°N '+lng.toFixed(3)+'°E');
+      const sp={name:locName,color:'#546e7a',coast:marine?'해안':'내륙'};
+      popup.setContent(buildWxPopup({sp,wx:wxR,marine,dayOffset:selectedForecastDay}));
+    }catch(err){
+      popup.setContent('<div style="padding:10px;color:#c00">날씨 조회 실패: '+err.message+'</div>');
+    }
+  });
+}
+
+// ══ 지도 필터 ════════════════════════════════════════
+function filterAll(btn){
+  document.querySelectorAll('.map-controls .fbtn').forEach(b=>{
+    b.classList.remove('on');
+    b.style.background='';
+    const c=b.dataset.fcolor;
+    if(c){b.style.color=c;b.style.borderColor=c;}
+  });
+  btn.classList.add('on');
+  spotMarkers.forEach(m=>{if(!map.hasLayer(m))map.addLayer(m);});
+  map.setView([36.2,127.5],7);
+}
+function filterRegion(region,btn){
+  document.querySelectorAll('.map-controls .fbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  spotMarkers.forEach(m=>{
+    const show=m.sd.region===region;
+    show?(!map.hasLayer(m)&&map.addLayer(m)):(map.hasLayer(m)&&map.removeLayer(m));
+  });
+  const pts=spotMarkers.filter(m=>m.sd.region===region).map(m=>[m.sd.lat,m.sd.lng]);
+  if(pts.length)map.fitBounds(pts,{padding:[40,40]});
+}
+
+function filterFish(species,btn){
+  document.querySelectorAll('.map-controls .fbtn').forEach(b=>{
+    b.classList.remove('on');
+    b.style.background='';
+    const c=b.dataset.fcolor;
+    if(c){b.style.color=c;b.style.borderColor=c;}
+    else{b.style.color='';b.style.borderColor='';}
+  });
+  btn.classList.add('on');
+  const si=SPECIES_INFO[species];
+  if(si){btn.style.background=si.color;btn.style.color='#fff';btn.style.borderColor=si.color;}
+  spotMarkers.forEach(m=>{
+    const show=m.sd.fish.some(f=>f.includes(species)||species.includes(f));
+    show?(!map.hasLayer(m)&&map.addLayer(m)):(map.hasLayer(m)&&map.removeLayer(m));
+  });
+  const pts=spotMarkers.filter(m=>map.hasLayer(m)).map(m=>[m.sd.lat,m.sd.lng]);
+  if(pts.length)map.fitBounds(pts,{padding:[40,40]});
+}
+function filterFishOnly(btn){
+  document.querySelectorAll('.map-controls .fbtn').forEach(b=>{
+    b.classList.remove('on');
+    b.style.background='';
+    const c=b.dataset.fcolor;
+    if(c){b.style.color=c;b.style.borderColor=c;}
+  });
+  btn.classList.add('on');
+  spotMarkers.forEach(m=>{if(!map.hasLayer(m))map.addLayer(m);});
+  const pts=spotMarkers.filter(m=>m.sd.star).map(m=>[m.sd.lat,m.sd.lng]);
+  spotMarkers.forEach(m=>{
+    const show=m.sd.star;
+    show?(!map.hasLayer(m)&&map.addLayer(m)):(map.hasLayer(m)&&map.removeLayer(m));
+  });
+  if(pts.length)map.fitBounds(pts,{padding:[40,40]});
+}
+
+// ══ 탭 전환 ════════════════════════════════════════
+let wxFetched=false;
+function switchTab(tab){
+  ['map','fish','log','tool'].forEach(t=>{
+    document.getElementById(t+'-view').style.display=t===tab?'block':'none';
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='map'){
+    setTimeout(()=>map.invalidateSize(),100);
+    if(!wxFetched){fetchWeather(false);wxFetched=true;}
+  }
+  if(tab==='log') renderLogs();
+  if(tab==='tool') renderCustomSpots();
+}
+
+
+// ══ 날씨 ═══════════════════════════════════════════
+// 전국 해안 (동해안·서해안·남해안·제주) lat/lng=육상, mlat/mlng=근해
+const WX_SPOTS=[
+  // ── 동해안 ──────────────────────────────────────
+  {id:'goseong',   name:'고성',      coast:'동해', color:'#6a1b9a', lat:38.380, lng:128.468, mlat:38.38, mlng:128.90},
+  {id:'sokcho',    name:'속초',      coast:'동해', color:'#00695c', lat:38.207, lng:128.591, mlat:38.21, mlng:129.00},
+  {id:'yangyang',  name:'양양',      coast:'동해', color:'#283593', lat:38.075, lng:128.627, mlat:38.07, mlng:129.05},
+  {id:'gangneung', name:'강릉',      coast:'동해', color:'#01579b', lat:37.751, lng:128.876, mlat:37.75, mlng:129.20},
+  {id:'donghae',   name:'동해',      coast:'동해', color:'#00838f', lat:37.524, lng:129.114, mlat:37.52, mlng:129.40},
+  {id:'samcheok',  name:'삼척',      coast:'동해', color:'#2e7d32', lat:37.450, lng:129.165, mlat:37.45, mlng:129.45},
+  {id:'uljin',     name:'울진',      coast:'동해', color:COLORS.uljin,     lat:36.993, lng:129.400, mlat:36.99, mlng:129.65},
+  {id:'yeongdeok', name:'영덕',      coast:'동해', color:COLORS.yeongdeok, lat:36.415, lng:129.365, mlat:36.42, mlng:129.65},
+  {id:'pohang',    name:'포항',      coast:'동해', color:COLORS.pohang,    lat:36.019, lng:129.343, mlat:36.02, mlng:129.65},
+  {id:'ulsan',     name:'울산',      coast:'동해', color:'#e65100', lat:35.538, lng:129.317, mlat:35.54, mlng:129.65},
+  {id:'busan',     name:'부산(기장)',coast:'동해', color:'#c62828', lat:35.244, lng:129.213, mlat:35.24, mlng:129.60},
+  {id:'ulleung',   name:'울릉도',    coast:'동해', color:'#880e4f', lat:37.485, lng:130.905, mlat:37.50, mlng:131.50},
+  // ── 서해안 ──────────────────────────────────────
+  {id:'baengnyeong',name:'백령도',   coast:'서해', color:'#004d40', lat:37.967, lng:124.700, mlat:37.90, mlng:123.80},
+  {id:'incheon',   name:'인천',      coast:'서해', color:'#0277bd', lat:37.456, lng:126.706, mlat:37.45, mlng:125.50},
+  {id:'taean',     name:'태안',      coast:'서해', color:'#0097a7', lat:36.745, lng:126.298, mlat:36.75, mlng:125.80},
+  {id:'anmyeon',   name:'안면도',    coast:'서해', color:'#00838f', lat:36.521, lng:126.322, mlat:36.50, mlng:125.60},
+  {id:'boryeong',  name:'보령',      coast:'서해', color:'#01579b', lat:36.333, lng:126.612, mlat:36.30, mlng:125.80},
+  {id:'gunsan',    name:'군산',      coast:'서해', color:'#00695c', lat:35.967, lng:126.737, mlat:35.97, mlng:126.00},
+  {id:'mokpo',     name:'목포',      coast:'서해', color:'#006064', lat:34.812, lng:126.393, mlat:34.81, mlng:125.80},
+  {id:'heuksan',   name:'흑산도',    coast:'서해', color:'#1a237e', lat:34.683, lng:125.433, mlat:34.60, mlng:124.50},
+  // ── 남해안 ──────────────────────────────────────
+  {id:'jindo',     name:'진도',      coast:'남해', color:'#37474f', lat:34.487, lng:126.263, mlat:34.10, mlng:125.80},
+  {id:'wando',     name:'완도',      coast:'남해', color:'#33691e', lat:34.314, lng:126.755, mlat:34.00, mlng:126.60},
+  {id:'goheung',   name:'고흥',      coast:'남해', color:'#1b5e20', lat:34.608, lng:127.278, mlat:34.10, mlng:127.40},
+  {id:'geomundo',  name:'거문도',    coast:'남해', color:'#b71c1c', lat:34.025, lng:127.307, mlat:33.70, mlng:127.30},
+  {id:'yeosu',     name:'여수',      coast:'남해', color:'#bf360c', lat:34.761, lng:127.662, mlat:34.20, mlng:127.90},
+  {id:'namhae',    name:'남해',      coast:'남해', color:'#4e342e', lat:34.837, lng:127.892, mlat:34.30, mlng:128.10},
+  {id:'yokji',     name:'욕지도',    coast:'남해', color:'#f57f17', lat:34.706, lng:128.372, mlat:34.30, mlng:128.50},
+  {id:'tongyeong', name:'통영',      coast:'남해', color:'#e65100', lat:34.854, lng:128.433, mlat:34.20, mlng:128.50},
+  {id:'geoje',     name:'거제',      coast:'남해', color:'#827717', lat:34.880, lng:128.621, mlat:34.20, mlng:128.90},
+  // ── 제주 ────────────────────────────────────────
+  {id:'hallim',    name:'한림',      coast:'제주', color:'#283593', lat:33.412, lng:126.265, mlat:33.20, mlng:125.80},
+  {id:'jeju',      name:'제주시',    coast:'제주', color:'#7b1fa2', lat:33.499, lng:126.531, mlat:33.00, mlng:126.50},
+  {id:'seongsan',  name:'성산',      coast:'제주', color:'#4527a0', lat:33.461, lng:126.930, mlat:33.20, mlng:127.10},
+  {id:'seogwipo',  name:'서귀포',    coast:'제주', color:'#6a1b9a', lat:33.254, lng:126.560, mlat:32.70, mlng:126.80},
+];
+
+// WMO 날씨 코드
+const WMO={
+  0:['☀️','맑음'],1:['🌤️','대체로 맑음'],2:['⛅','구름 조금'],3:['☁️','흐림'],
+  45:['🌫️','안개'],48:['🌫️','짙은 안개'],
+  51:['🌦️','이슬비(약)'],53:['🌧️','이슬비'],55:['🌧️','이슬비(강)'],
+  61:['🌧️','비(약)'],63:['🌧️','비'],65:['🌧️','비(강)'],
+  71:['🌨️','눈(약)'],73:['🌨️','눈'],75:['❄️','눈(강)'],77:['🌨️','싸락눈'],
+  80:['🌦️','소나기(약)'],81:['🌦️','소나기'],82:['⛈️','강한 소나기'],
+  85:['🌨️','눈소나기'],86:['❄️','강한 눈소나기'],
+  95:['⛈️','뇌우'],96:['⛈️','뇌우+우박'],99:['⛈️','강한 뇌우'],
+};
+function wmoInfo(c){return WMO[c]||['🌡️','알 수 없음'];}
+
+// 풍향 (0°=북)
+function windDir(deg){
+  return ['북','북동','동','남동','남','남서','서','북서'][Math.round(deg/45)%8];
+}
+
+// 파향 (파도가 오는 방향 → 낚시 체감 표현)
+function waveDir(deg){
+  const d=['북','북동','동','남동','남','남서','서','북서'][Math.round(deg/45)%8];
+  return `${d}쪽에서 밀려옴`;
+}
+
+// 파고 상태
+function waveLevel(h){
+  if(h<0.5) return{color:'#2e7d32',label:'잔잔 (0.5m 미만)'};
+  if(h<1.0) return{color:'#558b2f',label:`${h.toFixed(1)}m — 양호`};
+  if(h<1.5) return{color:'#f57c00',label:`${h.toFixed(1)}m — 주의`};
+  if(h<2.5) return{color:'#e53935',label:`${h.toFixed(1)}m — 위험`};
+  return           {color:'#b71c1c',label:`${h.toFixed(1)}m — 출조금지`};
+}
+
+// 풍속 상태
+function windLevel(w){
+  if(w<3)  return{color:'#2e7d32',label:`${w.toFixed(1)} m/s — 미풍`};
+  if(w<5)  return{color:'#558b2f',label:`${w.toFixed(1)} m/s — 약풍`};
+  if(w<8)  return{color:'#f57c00',label:`${w.toFixed(1)} m/s — 주의`};
+  if(w<12) return{color:'#e53935',label:`${w.toFixed(1)} m/s — 강풍`};
+  return         {color:'#b71c1c',label:`${w.toFixed(1)} m/s — 출조금지`};
+}
+
+// 5단계 출조 적합성 판단 (실시간 API 데이터 기반)
+// safetyAll(풍속m/s, 파고m, WMO코드, 강수량mm/h, 수온°C|null, 기압6h강하hPa)
+function safetyAll(wind,waveH,rainCode,precip,sst,pressureDrop6h){
+  const STORM=[95,96,99];       // 뇌우·폭풍
+  const HEAVY=[65,82];          // 집중호우
+  const LIGHT=[51,53,55,61,63,80,81]; // 약·보통 강수
+
+  // ── 1단계: 안전성 ────────────────────────
+  if(waveH>4||STORM.includes(rainCode))
+    return{cls:'danger',grade:'부적합',msg:'❌ 출조 금지',
+      detail: waveH>4?'파고 4m 초과 — 즉시 귀항':'태풍·뇌우 경보 발효'};
+  if(waveH>2.5||wind>15)
+    return{cls:'danger',grade:'부적합',msg:'❌ 출조 금지',
+      detail:'강풍 15m/s+ 또는 파고 2.5m+'};
+
+  // ── 2단계: 강수 ──────────────────────────
+  const mm=precip||0;
+  if(mm>20||HEAVY.includes(rainCode))
+    return{cls:'danger',grade:'나쁨',msg:'⛈ 출조 불가',
+      detail:'집중호우 20mm/h+ — 우천 철수 권장'};
+  if(mm>5)
+    return{cls:'warn',grade:'미흡',msg:'🌧 출조 미흡',
+      detail:'강우 5mm/h+ — 방수 장비 필수'};
+
+  // ── 3단계: 풍속 ──────────────────────────
+  if(wind>10)
+    return{cls:'warn',grade:'미흡',msg:'💨 출조 미흡',
+      detail:'풍속 10m/s+ — 루어 조작 어려움'};
+  if(wind>5&&waveH>1)
+    return{cls:'warn',grade:'미흡',msg:'💨 출조 주의',
+      detail:'바람+파도 겹침 — 갯바위 주의'};
+
+  // ── 4단계: 수온 활동도 ───────────────────
+  let sstScore=0, sstLabel='';
+  if(sst!=null){
+    if(sst<10||sst>28){ sstScore=-30; sstLabel='수온 극단(어류 비활성)'; }
+    else if(sst<15||sst>25){ sstScore=-10; sstLabel='수온 보통'; }
+    else{ sstScore=10; sstLabel='수온 최적('+sst.toFixed(1)+'°C)'; }
+  }
+
+  // ── 5단계: 기압 추이 ─────────────────────
+  const drop=pressureDrop6h||0;
+  let presScore=0, presLabel='';
+  if(drop>5){ presScore=-20; presLabel='기압 급락(악화 중)'; }
+  else if(drop>2){ presScore=-5; presLabel='기압 하강'; }
+  else{ presScore=5; presLabel='기압 안정'; }
+
+  // ── 종합 점수 (100점 만점) ───────────────
+  let score=100;
+  if(waveH>1.5) score-=20; else if(waveH>1.0) score-=10; else if(waveH>0.5) score-=4;
+  if(wind>3) score-=Math.min(25,Math.round((wind-3)*5));
+  if(LIGHT.includes(rainCode)) score-=8;
+  score+=sstScore+presScore;
+
+  const detail=[sstLabel,presLabel].filter(Boolean).join(' · ')||'기상 양호';
+  if(score>=85) return{cls:'best',grade:'최적',msg:'✅ 최적 출조',detail};
+  if(score>=65) return{cls:'good',grade:'좋음',msg:'🟢 출조 양호',detail};
+  if(score>=45) return{cls:'ok',  grade:'보통',msg:'🟡 출조 보통',detail};
+  return        {cls:'warn', grade:'미흡',msg:'⚠️ 출조 주의',detail};
+}
+
+// 물때 계산 (음력 기반 근사)
+function calcMulTte(dayOffset){
+  // 기준: 2024-01-11 신월(삭)
+  const ref=new Date(2024,0,11);
+  const lunar=29.530589;
+  const now=new Date();
+  if(dayOffset)now.setDate(now.getDate()+dayOffset);
+  const age=((now-ref)/864e5%lunar+lunar)%lunar;
+  const lDay=Math.floor(age)+1; // 음력 1~30일
+  const mul=lDay<=15?lDay:lDay-15; // 1물~15물
+  const tbl={
+    1:{t:'한사리',s:'조류 최강',f:'농어·삼치 최활성 / 베이트피시 이동 활발'},
+    2:{t:'한사리',s:'조류 강',  f:'농어·삼치 활성 / 광어 브레이크라인 집결'},
+    3:{t:'큰물',  s:'조류 강',  f:'다어종 활성 / 공략 용이'},
+    4:{t:'큰물',  s:'조류 강',  f:'다어종 활성'},
+    5:{t:'중간물',s:'조류 보통',f:'낚시 조건 양호 ⭐ 전반적 활성'},
+    6:{t:'중간물',s:'조류 보통',f:'낚시 조건 양호 ⭐'},
+    7:{t:'무시',  s:'조류 약해짐',f:'바닥어종 유리 / 볼락·광어 활성'},
+    8:{t:'조금',  s:'조류 최약',  f:'광어·도다리 유리 / 농어 다소 비활성'},
+    9:{t:'무시',  s:'조류 생김',  f:'바닥어종 활성 시작'},
+    10:{t:'중간물',s:'조류 보통',f:'낚시 조건 양호 ⭐'},
+    11:{t:'중간물',s:'조류 보통',f:'낚시 조건 양호 ⭐ 다어종 활성'},
+    12:{t:'큰물',  s:'조류 강',  f:'다어종 활성 / 베이트피시 집결'},
+    13:{t:'큰물',  s:'조류 강',  f:'다어종 활성'},
+    14:{t:'한사리',s:'조류 강',  f:'농어·삼치 활성'},
+    15:{t:'한사리',s:'조류 최강',f:'농어·삼치 최활성 / 한사리 피크'},
+  };
+  const info=tbl[mul]||tbl[1];
+  const mulColor=
+    mul===8?'#0277bd':
+    (mul<=2||mul>=14)?'#c62828':'#388e3c';
+  return{mul,lDay,...info,mulColor};
+}
+
+// 날짜 레이블 (0=오늘, 1=내일, ...)
+function forecastDayLabel(offset){
+  const d=new Date();d.setDate(d.getDate()+offset);
+  const days=['일','월','화','수','목','금','토'];
+  if(offset===0)return '오늘';
+  if(offset===1)return '내일';
+  return (d.getMonth()+1)+'/'+(d.getDate())+'('+days[d.getDay()]+')';
+}
+// ── 캘린더 날짜 선택기 ──────────────────────────
+function openCalendar(){
+  const now=new Date();
+  calYear=now.getFullYear(); calMonth=now.getMonth();
+  renderCalendar();
+  document.getElementById('cal-overlay').classList.add('open');
+}
+function closeCalendar(){
+  document.getElementById('cal-overlay').classList.remove('open');
+}
+function calNav(dir){
+  calMonth+=dir;
+  if(calMonth<0){calMonth=11;calYear--;}
+  if(calMonth>11){calMonth=0;calYear++;}
+  renderCalendar();
+}
+function renderCalendar(){
+  const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const maxDate=new Date(today); maxDate.setDate(today.getDate()+15);
+  const selDate=new Date(today); selDate.setDate(today.getDate()+selectedForecastDay);
+  document.getElementById('cal-month-label').textContent=calYear+'년 '+(calMonth+1)+'월';
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const dows=['일','월','화','수','목','금','토'];
+  let html=dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<firstDay;i++) html+='<div class="cal-day cal-empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const td=new Date(calYear,calMonth,d);
+    const isSel=td.getTime()===selDate.getTime();
+    const isToday=td.getTime()===today.getTime();
+    const disabled=td<today||td>maxDate;
+    const offset=Math.round((td-today)/864e5);
+    let cls='cal-day'+(disabled?' cal-disabled':isSel?' cal-selected':isToday?' cal-today':' cal-avail');
+    const click=!disabled?`onclick="selectCalDay(${offset})"`:'';
+    html+=`<div class="${cls}" ${click}>${d}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+function selectCalDay(offset){
+  selectedForecastDay=offset;
+  updateDateSelBtn();
+  closeCalendar();
+  if(marineDetailOn) renderMarineDetail();
+}
+function updateDateSelBtn(){
+  const btn=document.getElementById('date-sel-btn');
+  if(!btn) return;
+  if(selectedForecastDay===0){
+    btn.textContent='📅 오늘';
+    btn.classList.remove('on');
+  }else{
+    const d=new Date(); d.setDate(d.getDate()+selectedForecastDay);
+    const days=['일','월','화','수','목','금','토'];
+    btn.textContent='📅 '+(d.getMonth()+1)+'/'+(d.getDate())+'('+days[d.getDay()]+')';
+    btn.classList.add('on');
+  }
+}
+
+// 시간 라벨
+function hLabel(h){
+  if(h===0)return '자정';if(h<12)return `오전${h}시`;
+  if(h===12)return '정오';return `오후${h-12}시`;
+}
+// 골든타임 클래스
+function goldenClass(h){
+  if(h>=3&&h<=7) return 'golden-dawn';
+  if(h>=20||h<=2)return 'golden-night';
+  return '';
+}
+
+// 날씨+바다 통합 카드 생성
+function buildWxCard(spot,atmo,marine,dayOffset){
+  dayOffset=dayOffset||0;
+  const nowH=new Date().getHours();
+  const repH=dayOffset===0?nowH:12; // 미래 날짜는 정오 기준
+  const base=dayOffset*24;
+  const maxIdx=(atmo?.hourly?.temperature_2m?.length||24)-1;
+  const curIdx=Math.min(base+repH,maxIdx);
+  const hourly=atmo.hourly||{};
+  const cur={
+    temperature_2m:       hourly.temperature_2m?.[curIdx]??0,
+    apparent_temperature: hourly.apparent_temperature?.[curIdx]??0,
+    weather_code:         hourly.weather_code?.[curIdx]??0,
+    wind_speed_10m:       hourly.wind_speed_10m?.[curIdx]??0,
+    wind_direction_10m:   hourly.wind_direction_10m?.[curIdx]??0,
+    wind_gusts_10m:       hourly.wind_gusts_10m?.[curIdx]??0,
+    precipitation:        hourly.precipitation?.[curIdx]??0,
+    relative_humidity_2m: hourly.relative_humidity_2m?.[curIdx]??0,
+  };
+  const mc=dayOffset===0?(marine?.current||{}):{};
+  const mh=marine?.hourly||{};
+  const mhLen=(mh.wave_height?.length||24)-1;
+  const mIdx=Math.min(base+repH,mhLen);
+
+  const waveH=dayOffset===0?(mc.wave_height??mh.wave_height?.[mIdx]??0):(mh.wave_height?.[mIdx]??0);
+  const waveP=dayOffset===0?(mc.wave_period??mh.wave_period?.[mIdx]):(mh.wave_period?.[mIdx]);
+  const swaveH=dayOffset===0?(mc.swell_wave_height??mh.swell_wave_height?.[mIdx]):(mh.swell_wave_height?.[mIdx]);
+  const swaveP=dayOffset===0?(mc.swell_wave_period??mh.swell_wave_period?.[mIdx]):(mh.swell_wave_period?.[mIdx]);
+  const waveDi=dayOffset===0?(mc.wave_direction??mh.wave_direction?.[mIdx]):(mh.wave_direction?.[mIdx]);
+
+  const [wicon,wdesc]=wmoInfo(cur.weather_code);
+  const sst=mh.sea_surface_temperature?.[mIdx];
+  const pArr2=hourly.surface_pressure;
+  const pBase=Math.max(0,curIdx-6);
+  const pdrop2=pArr2?Math.max(0,(pArr2[pBase]||pArr2[0]||0)-(pArr2[curIdx]||0)):0;
+  const sf=safetyAll(cur.wind_speed_10m,waveH,cur.weather_code,cur.precipitation||0,sst??null,pdrop2);
+  const wlv=windLevel(cur.wind_speed_10m);
+  const wvlv=waveLevel(waveH);
+  const mul=calcMulTte(dayOffset);
+  const sstStr=sst!=null?`${sst.toFixed(1)}°C`:'약 22~24°C (8월 평균)';
+
+  // 시간별 예보 셀 (선택 날짜 0~23시)
+  const cells=[];
+  for(let i=0;i<24;i++){
+    const h=i;
+    const hi=Math.min(base+i,maxIdx);
+    const [hicon]=wmoInfo(hourly.weather_code?.[hi]??0);
+    const hw=mh.wave_height?.[Math.min(base+i,mhLen)];
+    const gc=goldenClass(h);
+    const htmp=Math.round(hourly.temperature_2m?.[hi]??0);
+    const hws=hourly.wind_speed_10m?.[hi]??0;
+    const hpop=hourly.precipitation_probability?.[hi]??0;
+    cells.push(`<div class="wx-hcell ${gc}">
+      <div class="wx-htime">${hLabel(h)}</div>
+      <div class="wx-hicon">${hicon}</div>
+      <div class="wx-htemp">${htmp}°</div>
+      <div class="wx-hwind" style="color:${hws>=5?'#e65100':'#1a73e8'}">
+        ${hws.toFixed(1)}<small>m/s</small></div>
+      ${hw!=null?`<div class="wx-hpop" style="color:${hw>=1?'#e53935':'#0277bd'}">파${hw.toFixed(1)}m</div>`
+                :`<div class="wx-hpop">${hpop}%</div>`}
+    </div>`);
+  }
+
+  return `<div class="wx-card">
+    <div class="wx-header" style="background:${spot.color}">
+      <span class="wx-region-name">📍 경북 ${spot.name} 해역</span>
+    </div>
+
+    <!-- 기상 현황 -->
+    <div class="wx-body">
+      <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:6px;letter-spacing:.5px">🌤️ 기상 현황</div>
+      <div class="wx-main">
+        <div class="wx-icon">${wicon}</div>
+        <div class="wx-right">
+          <div class="wx-temp">${Math.round(cur.temperature_2m)}<span style="font-size:18px">°C</span></div>
+          <div class="wx-desc">${wdesc}</div>
+          <div class="wx-feels">체감 ${Math.round(cur.apparent_temperature)}°C · 습도 ${cur.relative_humidity_2m}%</div>
+        </div>
+      </div>
+      <div class="wx-stats" style="grid-template-columns:1fr 1fr">
+        <div class="wx-stat">
+          <div class="wx-stat-label">💨 풍속</div>
+          <div class="wx-stat-val" style="color:${wlv.color}">${wlv.label}</div>
+          <div style="font-size:10px;color:#888;margin-top:2px">${windDir(cur.wind_direction_10m)}풍</div>
+        </div>
+        <div class="wx-stat">
+          <div class="wx-stat-label">🌧️ 강수</div>
+          <div class="wx-stat-val" style="color:${cur.precipitation>0?'#0277bd':'#2e7d32'}">
+            ${cur.precipitation>0?cur.precipitation.toFixed(1)+'mm':'없음'}</div>
+          <div style="font-size:10px;color:#888;margin-top:2px">습도 ${cur.relative_humidity_2m}%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 바다 상황 -->
+    <div style="background:#e3f2fd;margin:0 14px;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:700;color:#01579b;margin-bottom:8px;letter-spacing:.5px">🌊 바다 상황 (해양 기상)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+        <div class="wx-stat" style="background:#fff">
+          <div class="wx-stat-label">🌊 파고</div>
+          <div class="wx-stat-val" style="color:${wvlv.color};font-size:12px">${wvlv.label}</div>
+        </div>
+        <div class="wx-stat" style="background:#fff">
+          <div class="wx-stat-label">⏱️ 파주기</div>
+          <div class="wx-stat-val">${waveP!=null?waveP.toFixed(1)+'초':'—'}</div>
+          <div style="font-size:9px;color:#888;margin-top:1px">
+            ${waveP!=null?(waveP<5?'짧은 파':waveP<10?'보통 파':'긴 너울'):''}
+          </div>
+        </div>
+        <div class="wx-stat" style="background:#fff">
+          <div class="wx-stat-label">🌡️ 수온</div>
+          <div class="wx-stat-val" style="color:#0277bd">${sstStr}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div class="wx-stat" style="background:#fff">
+          <div class="wx-stat-label">🌀 너울고</div>
+          <div class="wx-stat-val">${swaveH!=null?swaveH.toFixed(2)+'m':'—'}</div>
+          <div style="font-size:9px;color:#888;margin-top:1px">
+            ${swaveP!=null?'주기 '+swaveP.toFixed(1)+'초':''}
+          </div>
+        </div>
+        <div class="wx-stat" style="background:#fff">
+          <div class="wx-stat-label">➡️ 파향</div>
+          <div class="wx-stat-val" style="font-size:11px">
+            ${waveDi!=null?waveDir(waveDi):'—'}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 물때 -->
+    <div style="background:#f3e5f5;margin:0 14px;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:700;color:#4a148c;margin-bottom:6px;letter-spacing:.5px">🌙 ${forecastDayLabel(dayOffset)} 물때</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="text-align:center;background:#fff;border-radius:10px;padding:8px 14px;border:2px solid ${mul.mulColor}">
+          <div style="font-size:9px;color:#888">물때</div>
+          <div style="font-size:26px;font-weight:900;color:${mul.mulColor};line-height:1">${mul.mul}물</div>
+          <div style="font-size:11px;font-weight:700;color:${mul.mulColor}">${mul.t}</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:700;color:#4a148c;margin-bottom:3px">${mul.s}</div>
+          <div style="font-size:11px;color:#555;line-height:1.5">${mul.f}</div>
+          <div style="font-size:10px;color:#888;margin-top:4px">음력 ${mul.lDay}일 기준 (근사치)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 종합 안전도 -->
+    <div style="padding:0 14px 10px">
+      <div class="wx-safety ${sf.cls}">${sf.msg}</div>
+      <div style="font-size:10px;color:#888;text-align:center;margin-top:4px">${sf.detail}</div>
+    </div>
+
+    <!-- 시간별 예보 -->
+    <div class="wx-hourly-wrap">
+      <div class="wx-hourly-label">${forecastDayLabel(dayOffset)} 시간별 예보 (풍속 m/s · 파고 m / 강수확률 %)</div>
+      <div class="wx-hourly-row">${cells.join('')}</div>
+    </div>
+  </div>`;
+}
+
+// ── 날씨 마커 상태 ───────────────────────────
+let wxDataCache=null, marineDetailOn=false, clickWxMode=false;
+let selectedForecastDay=0;
+let calYear=0,calMonth=0;
+let curFishSpecies='all';
+
+// 📍 지점날씨 클릭모드 토글
+function toggleClickWx(btn){
+  clickWxMode=!clickWxMode;
+  btn.classList.toggle('on',clickWxMode);
+  document.getElementById('map').classList.toggle('click-wx-mode',clickWxMode);
+}
+
+// 🌊 해양상세: Leaflet 지도 ↔ Windy+상세 패널 전환
+let windyOverlay='waves', marineDetailCoast='all', windyLat=35.5, windyLng=127.5, windyZoom=6;
+function toggleMarineLayer(btn){
+  marineDetailOn=!marineDetailOn;
+  btn.classList.toggle('on',marineDetailOn);
+  const mapEl=document.getElementById('map');
+  const wpEl=document.getElementById('windy-panel');
+  if(marineDetailOn){
+    mapEl.style.display='none';
+    wpEl.style.display='flex';
+    renderMarineDetail();
+  } else {
+    mapEl.style.display='block';
+    wpEl.style.display='none';
+    setTimeout(()=>map.invalidateSize(),100);
+  }
+}
+
+// 해안 필터 전환
+function setMarineCoast(coast,btn){
+  marineDetailCoast=coast;
+  document.querySelectorAll('.mfbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMarineDetail();
+}
+
+// 해양 상세 카드 렌더링
+function renderMarineDetail(){
+  const el=document.getElementById('marine-detail');
+  if(!el) return;
+  if(!wxDataCache){
+    el.innerHTML='<div style="text-align:center;padding:24px;color:#aaa;font-size:13px">날씨 데이터를 불러오는 중...</div>';
+    return;
+  }
+  const list=marineDetailCoast==='all'
+    ? wxDataCache
+    : wxDataCache.filter(d=>d.sp.coast===marineDetailCoast);
+
+  const dateBanner=selectedForecastDay===0?''
+    :'<div style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#e8f0fe;'
+    +'border-bottom:1px solid #c5cae9;font-size:11px;font-weight:700;color:#1565c0">'
+    +'📅 '+forecastDayLabel(selectedForecastDay)+' 예보 · 날짜 변경: 지도 상단 📅 버튼</div>';
+  let html=dateBanner+'<div class="md-grid">';
+  list.forEach(d=>{
+    const {sp,wx,marine}=d;
+    if(!wx||!wx.hourly){
+      html+='<div class="md-card"><div class="md-card-hd"><span class="md-city-nm" style="color:'+sp.color+'">'+sp.name+'</span><span style="font-size:11px;color:#aaa">데이터 없음</span></div></div>';
+      return;
+    }
+    // 선택 날짜 인덱스 계산
+    const nowH=new Date().getHours();
+    const repH=selectedForecastDay===0?nowH:12;
+    const base=selectedForecastDay*24;
+    const maxI=(wx.hourly?.temperature_2m?.length||24)-1;
+    const hi=Math.min(base+repH,maxI);
+    const hw=wx.hourly||{};
+    const mhLen=(marine?.hourly?.wave_height?.length||24)-1;
+    const mhi=Math.min(base+repH,mhLen);
+    const cur={
+      weather_code:         hw.weather_code?.[hi]||0,
+      temperature_2m:       hw.temperature_2m?.[hi]||0,
+      apparent_temperature: hw.apparent_temperature?.[hi]||0,
+      wind_speed_10m:       hw.wind_speed_10m?.[hi]||0,
+      wind_gusts_10m:       hw.wind_gusts_10m?.[hi]||0,
+      wind_direction_10m:   hw.wind_direction_10m?.[hi]||0,
+      precipitation:        hw.precipitation?.[hi]||0,
+      relative_humidity_2m: hw.relative_humidity_2m?.[hi]||0,
+    };
+    const wCode=cur.weather_code;
+    const wi=wmoInfo(wCode);
+    const temp=Math.round(cur.temperature_2m);
+    const feels=Math.round(cur.apparent_temperature||temp);
+    const wind=cur.wind_speed_10m.toFixed(1);
+    const gust=cur.wind_gusts_10m.toFixed(1);
+    const wdir=windDir(cur.wind_direction_10m);
+    const rain=cur.precipitation.toFixed(1);
+    const hum=cur.relative_humidity_2m;
+    // 파도: 오늘은 current 우선, 미래는 hourly 사용
+    const mhWh=marine?.hourly?.wave_height?.[mhi];
+    const mhWp=marine?.hourly?.wave_period?.[mhi];
+    const mhSwh=marine?.hourly?.swell_wave_height?.[mhi];
+    const mhSwp=marine?.hourly?.swell_wave_period?.[mhi];
+    const wh=(selectedForecastDay===0?(marine?.current?.wave_height??mhWh):mhWh)?.toFixed(1)||'-';
+    const wp=(selectedForecastDay===0?(marine?.current?.wave_period??mhWp):mhWp)?.toFixed(0)||'-';
+    const swh=(selectedForecastDay===0?(marine?.current?.swell_wave_height??mhSwh):mhSwh)?.toFixed(1)||'-';
+    const sst_raw=marine?.hourly?.sea_surface_temperature?.[mhi];
+    const sst=sst_raw!=null?sst_raw.toFixed(1):'-';
+    const waveHNum=(selectedForecastDay===0?(marine?.current?.wave_height??mhWh??0):(mhWh??0));
+    const mul=calcMulTte(selectedForecastDay);
+    const pArr3=wx?.hourly?.surface_pressure;
+    const pdrop3=pArr3?Math.max(0,(pArr3[Math.max(0,hi-6)]||pArr3[0]||0)-(pArr3[hi]||0)):0;
+    const sf=safetyAll(cur.wind_speed_10m||0,waveHNum,wCode,cur.precipitation||0,sst_raw??null,pdrop3);
+    const sfClr={best:'#1565c0',good:'#2e7d32',ok:'#f9a825',warn:'#e65100',danger:'#c62828'}[sf.cls]||'#888';
+    const wlv=waveLevel(waveHNum);
+    const wndlv=windLevel(cur.wind_speed_10m||0);
+
+    html+=
+      '<div class="md-card">'
+      +(waveHNum>=1.5?'<div style="background:#fce4ec;color:#c62828;padding:5px 10px;font-size:10px;font-weight:700;border-radius:8px 8px 0 0">⚠️ 파고 높음 ('+wh+'m) — 갯바위 출조 위험</div>':'')
+      +'<div class="md-card-hd" style="border-left:4px solid '+sp.color+'">'
+      +'<div><span class="md-city-nm" style="color:'+sp.color+'">'+sp.name+'</span>'
+      +'<span class="md-coast-tag">'+sp.coast+'안</span></div>'
+      +'<div class="md-safe-pill" style="background:'+sfClr+'1a;color:'+sfClr+'">'+sf.msg+'</div>'
+      +'</div>'
+      +'<div class="md-card-bd">'
+      +'<div class="md-main">'+wi[0]+' '+temp+'°C<span class="md-feels">체감 '+feels+'°</span></div>'
+      +'<div class="md-2col">'
+      +'<div class="md-row">💨<span class="md-lbl">풍속</span><b>'+wind+'m/s '+wdir+'</b></div>'
+      +'<div class="md-row">💨<span class="md-lbl">돌풍</span><b>'+gust+'m/s</b></div>'
+      +'<div class="md-row">🌧<span class="md-lbl">강수</span><b>'+rain+'mm</b></div>'
+      +'<div class="md-row">💧<span class="md-lbl">습도</span><b>'+hum+'%</b></div>'
+      +'<div class="md-row">🌊<span class="md-lbl">파고</span><b style="color:'+wlv.color+'">'+wh+'m</b></div>'
+      +'<div class="md-row">〜<span class="md-lbl">너울</span><b>'+swh+'m</b></div>'
+      +'<div class="md-row">⏱<span class="md-lbl">파주기</span><b>'+wp+(wp!=='-'?'초':'')+'</b></div>'
+      +'<div class="md-row">🌡<span class="md-lbl">수온</span><b>'+sst+(sst!=='-'?'°C':'')+'</b></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:5px;font-size:10px;flex-wrap:wrap">'
+      +'<span style="background:'+sfClr+'12;color:'+sfClr+';border-radius:6px;padding:2px 8px;font-weight:700">'+sf.detail+'</span>'
+      +'<span style="background:#e3f2fd;color:#0277bd;border-radius:6px;padding:2px 8px;font-weight:600">물때 '+mul.mul+'물 '+mul.t+' · '+mul.s+'</span>'
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+// Windy 오버레이 전환
+function setWindyOverlay(type){
+  windyOverlay=type;
+  document.querySelectorAll('.wov-btn').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('wov-'+type);
+  if(el) el.classList.add('active');
+  document.getElementById('windy-iframe').src=
+    'https://embed.windy.com/embed2.html?lat='+windyLat+'&lon='+windyLng+'&zoom='+windyZoom+'&level=surface'
+    +'&overlay='+type+'&product=ecmwf&menu=&message=true&marker=&calendar=now'
+    +'&pressure=&type=map&location=coordinates&detail=&metricWind=m%2Fs&metricTemp=%C2%B0C&radarRange=-1';
+}
+function focusWindy(lat,lng){
+  windyLat=lat; windyLng=lng; windyZoom=11;
+  if(document.getElementById('fish-view').style.display!=='none') switchTab('map');
+  if(!marineDetailOn){
+    const btn=document.getElementById('ctrl-marine');
+    if(btn) toggleMarineLayer(btn);
+  }
+  document.getElementById('windy-iframe').src=
+    'https://embed.windy.com/embed2.html?lat='+lat+'&lon='+lng+'&zoom=11&level=surface'
+    +'&overlay='+windyOverlay+'&product=ecmwf&menu=&message=true&marker=&calendar=now'
+    +'&pressure=&type=map&location=coordinates&detail=&metricWind=m%2Fs&metricTemp=%C2%B0C&radarRange=-1';
+}
+
+// HTML 특수문자 이스케이프 (XSS 방지)
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// 날씨 마커 팝업 HTML (dayOffset: 0=오늘 ~ 6=7일후)
+function buildWxPopup(d){
+  try{
+    const {sp,wx,marine,dayOffset=0}=d;
+    const nm=escHtml(sp.name);
+    if(!wx) return '<b>'+nm+'</b><br>⚠️ 날씨 API 연결 실패<br><span style="font-size:10px;color:#888">네트워크 연결 또는 API 서버를 확인하세요</span>';
+    if(wx._err||wx.error) return '<b>'+nm+'</b><br>⚠️ API 오류<br><span style="font-size:10px;color:#888">'+escHtml(wx.reason||'알 수 없는 오류')+'</span>';
+    if(!wx.hourly) return '<b>'+nm+'</b><br>⚠️ 날씨 데이터 없음<br><span style="font-size:10px;color:#888">응답 구조가 올바르지 않습니다</span>';
+
+    // 선택 날짜 인덱스
+    const nowH=new Date().getHours();
+    const repH=dayOffset===0?nowH:12;
+    const base=dayOffset*24;
+    const maxI=(wx.hourly?.temperature_2m?.length||24)-1;
+    const idx=Math.min(base+repH,maxI);
+    const mhLen=(marine?.hourly?.wave_height?.length||24)-1;
+    const mIdx=Math.min(base+repH,mhLen);
+
+    const h=wx.hourly;
+    const wCode=h.weather_code?.[idx]||0;
+    const wi=wmoInfo(wCode);
+    const temp=Math.round(h.temperature_2m?.[idx]||0);
+    const feels=Math.round(h.apparent_temperature?.[idx]||temp);
+    const wind=(h.wind_speed_10m?.[idx]||0).toFixed(1);
+    const wDir=windDir(h.wind_direction_10m?.[idx]||0);
+    const hum=h.relative_humidity_2m?.[idx]||0;
+    const gust=(h.wind_gusts_10m?.[idx]||0).toFixed(1);
+    const rain=(h.precipitation?.[idx]||0).toFixed(1);
+    // 파도: 오늘은 current 우선, 미래는 hourly
+    const mhWh=marine?.hourly?.wave_height?.[mIdx];
+    const mhWp=marine?.hourly?.wave_period?.[mIdx];
+    const mhSwh=marine?.hourly?.swell_wave_height?.[mIdx];
+    const wh=(dayOffset===0?(marine?.current?.wave_height??mhWh):mhWh)?.toFixed(1)||'-';
+    const wp=(dayOffset===0?(marine?.current?.wave_period??mhWp):mhWp)?.toFixed(0)||'-';
+    const swh=(dayOffset===0?(marine?.current?.swell_wave_height??mhSwh):mhSwh)?.toFixed(1)||'-';
+    const sst_v=marine?.hourly?.sea_surface_temperature?.[mIdx];
+    const sst_num=sst_v!=null?+sst_v:null;
+    const sst=sst_num!=null?sst_num.toFixed(1):'-';
+    const waveHNum=dayOffset===0?(marine?.current?.wave_height??mhWh??0):(mhWh??0);
+    const pArr=h.surface_pressure;
+    const pressureDrop6h=pArr?Math.max(0,(pArr[Math.max(0,idx-6)]||pArr[0]||0)-(pArr[idx]||0)):0;
+    let mulTxt='';
+    try{ const m=calcMulTte(dayOffset); mulTxt='물때 '+m.mul+'물 '+m.t+' · '+m.s; }catch(_){}
+    const sf=safetyAll(h.wind_speed_10m?.[idx]||0,waveHNum,wCode,h.precipitation?.[idx]||0,sst_num,pressureDrop6h);
+    const sfClr={best:'#1565c0',good:'#2e7d32',ok:'#f9a825',warn:'#e65100',danger:'#c62828'}[sf.cls]||'#888';
+    const gradeBar='<span style="display:inline-block;padding:1px 7px;border-radius:4px;background:'+sfClr+';color:#fff;font-size:10px;font-weight:800">'+sf.grade+'</span>';
+    const p6txt=pressureDrop6h>0?'↓'+pressureDrop6h.toFixed(1)+'hPa/6h':'안정';
+    return '<div style="min-width:240px;font-size:12px;line-height:1.6;padding:8px 10px">'
+      +'<div style="font-size:14px;font-weight:800;color:'+sp.color+';margin-bottom:3px">'+nm+' <span style="font-size:10px;color:#888">'+sp.coast+'안 · '+forecastDayLabel(dayOffset)+'</span></div>'
+      +'<div class="wx-popup-main">'+wi[0]+' '+temp+'°C</div>'
+      +'<div style="font-size:10px;color:#777;margin-bottom:8px">'+wi[1]+' · 체감 '+feels+'°</div>'
+      +'<table style="width:100%;font-size:11px;border-collapse:collapse">'
+      +'<tr><td style="padding:2px 6px 2px 0;color:#555">💨 풍속</td><td><b>'+wind+'m/s '+wDir+'</b></td>'
+      +'    <td style="padding:2px 0 2px 8px;color:#555">💧 습도</td><td><b>'+hum+'%</b></td></tr>'
+      +'<tr><td style="color:#555">💨 돌풍</td><td><b>'+gust+'m/s</b></td>'
+      +'    <td style="padding-left:8px;color:#555">🌧 강수</td><td><b>'+rain+'mm/h</b></td></tr>'
+      +(marine
+        ?(()=>{const wlv2=waveLevel(waveHNum);
+          return '<tr><td style="color:#555">🌊 파고</td><td><b style="color:'+wlv2.color+'">'+wh+'m'+(waveHNum>=1.5?' ⚠️':'')+' </b></td>'
+          +'<td style="padding-left:8px;color:#555">⏱ 파주기</td><td><b>'+wp+(wp!=='-'?'초':'')+'</b></td></tr>'
+          +(waveHNum>=1.5?'<tr><td colspan="4" style="background:#fce4ec;color:#c62828;font-weight:700;font-size:10px;padding:4px 6px;border-radius:4px">⚠️ 파고 높음 — 갯바위·방파제 끝단 출조 위험</td></tr>':'')+
+          '<tr><td style="color:#555">〜 너울</td><td><b>'+swh+'m</b></td>'
+          +'<td style="padding-left:8px;color:#555">🌡 수온</td><td><b>'+sst+(sst!=='-'?'°C':'')+'</b></td></tr>';
+        })()
+        :'<tr><td colspan="4" style="color:#888;font-size:10px;padding:4px 0">'
+        +'🌊 바다를 클릭하면 파고·파주기·수온·너울 표시</td></tr>')
+      +'<tr><td style="color:#555">🔽 기압추이</td><td colspan="3"><b>'+p6txt+'</b></td></tr>'
+      +'</table>'
+      +'<div class="wx-popup-safe" style="background:'+sfClr+'18;color:'+sfClr+';margin-top:6px">'
+        +gradeBar+'&ensp;'+sf.msg+'<br><span style="font-weight:400;font-size:10px">'+sf.detail+'</span></div>'
+      +(mulTxt?'<div style="font-size:10px;color:#777;text-align:center;margin-top:4px">'+mulTxt+'</div>':'')
+      +'</div>';
+  }catch(e){
+    return '<b>'+(d.sp?.name||'?')+'</b><br><span style="color:#c00">팝업 오류: '+e.message+'</span>';
+  }
+}
+
+// ══ 기상청(KMA) API 유틸 ════════════════════════════
+
+// 위경도 → 기상청 격자 좌표 변환 (공식 알고리즘)
+function latLngToKmaGrid(lat,lng){
+  const RE=6371.00877,GRID=5.0,S1=30.0,S2=60.0,OL=126.0,OA=38.0,XO=43,YO=136,D=Math.PI/180;
+  const re=RE/GRID,s1=S1*D,s2=S2*D,ol=OL*D,oa=OA*D;
+  const sn=Math.log(Math.cos(s1)/Math.cos(s2))/Math.log(Math.tan(Math.PI*.25+s2*.5)/Math.tan(Math.PI*.25+s1*.5));
+  const sf=Math.pow(Math.tan(Math.PI*.25+s1*.5),sn)*Math.cos(s1)/sn;
+  const ro=re*sf/Math.pow(Math.tan(Math.PI*.25+oa*.5),sn);
+  const ra=re*sf/Math.pow(Math.tan(Math.PI*.25+lat*D*.5),sn);
+  let th=(lng*D-ol)*sn;
+  if(th>Math.PI)th-=2*Math.PI; if(th<-Math.PI)th+=2*Math.PI;
+  return{nx:Math.floor(ra*Math.sin(th)+XO+.5),ny:Math.floor(ro-ra*Math.cos(th)+YO+.5)};
+}
+
+// 초단기실황 기준시각 (현재 -1시간, 매시 정각 발표)
+function kmaBaseDateTime(){
+  const t=new Date(Date.now()-60*60*1000);
+  const pad=n=>String(n).padStart(2,'0');
+  return{
+    date:t.getFullYear()+pad(t.getMonth()+1)+pad(t.getDate()),
+    time:pad(t.getHours())+'00'
+  };
+}
+
+// KMA PTY(강수형태) + REH(습도) → WMO 유사 날씨코드
+function ptyToWmoCode(pty,reh){
+  const p=parseInt(pty)||0;
+  if(p===1||p===5)return 61; // 비·빗방울
+  if(p===2||p===6)return 65; // 비/눈
+  if(p===3||p===7)return 71; // 눈·눈날림
+  if(p===4)return 80;        // 소나기
+  // 강수 없음 → 습도로 하늘 추정
+  const h=parseFloat(reh)||50;
+  return h>=85?3:h>=65?2:0;  // 흐림/구름많음/맑음
+}
+
+// 체감온도 근사 계산 (기상청 방식 단순화)
+function feelsLike(temp,wind,hum){
+  if(temp<=10&&wind>=1.3){
+    return Math.round(13.12+0.6215*temp-11.37*Math.pow(wind,.16)+0.3965*temp*Math.pow(wind,.16));
+  }
+  if(temp>=27){
+    const hi=-8.784+1.611*temp+2.339*hum-0.1461*temp*hum-0.01231*temp*temp-0.01642*hum*hum;
+    return Math.round(hi);
+  }
+  return Math.round(temp);
+}
+
+// 도시 1개 KMA 초단기실황 조회 → wx 구조 반환
+async function fetchKmaSpot(sp,date,time){
+  const{nx,ny}=latLngToKmaGrid(sp.lat,sp.lng);
+  // Worker가 설정된 경우 Worker 경유 (CORS 없이 정상 작동)
+  const base=WORKER_URL
+    ?WORKER_URL+'/api/kma/now'
+    :'https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getUltraSrtNcst';
+  const params=new URLSearchParams({pageNo:'1',numOfRows:'100',dataType:'JSON',
+    base_date:date,base_time:time,nx,ny});
+  if(!WORKER_URL) params.set('authKey',KMA_AUTH_KEY);
+  const url=base+'?'+params.toString();
+  const j=await fetch(url).then(r=>r.json());
+  if(j?.response?.header?.resultCode!=='00')return null;
+  const m={};
+  j.response.body.items.item.forEach(it=>{m[it.category]=it.obsrValue;});
+  const temp=parseFloat(m.T1H)||0;
+  const wind=parseFloat(m.WSD)||0;
+  const hum=parseFloat(m.REH)||50;
+  const wCode=ptyToWmoCode(m.PTY,m.REH);
+  const fill=v=>Array(24).fill(v);
+  return{
+    hourly:{
+      temperature_2m:       fill(temp),
+      apparent_temperature: fill(feelsLike(temp,wind,hum)),
+      weather_code:         fill(wCode),
+      wind_speed_10m:       fill(wind),
+      wind_direction_10m:   fill(parseFloat(m.VEC)||0),
+      wind_gusts_10m:       fill(Math.round(wind*1.4*10)/10),
+      precipitation:        fill(parseFloat(m.RN1)||0),
+      relative_humidity_2m: fill(hum),
+      surface_pressure:     fill(1013),
+      precipitation_probability: fill(0),
+    }
+  };
+}
+
+// 기상청 해양기상부이 관측소 조회 → 파고·수온·풍속 반환
+async function fetchKmaSeaObs(stnId){
+  const url=WORKER_URL
+    ?WORKER_URL+'/api/kma/buoy?stn='+stnId
+    :'https://apihub.kma.go.kr/api/typ01/url/sea_obs.php?tm=0&stn='+stnId+'&authKey='+KMA_AUTH_KEY;
+  const txt=await fetch(url).then(r=>r.text());
+  // 응답: "#" 주석 줄 제외, 첫 데이터 줄 파싱
+  // 형식: B, TM, STN_ID, STN_KO, LON, LAT, WH, WD, WS, GST, TW, TA, PA, HM
+  const lines=txt.split('\n').filter(l=>l.trim()&&!l.startsWith('#'));
+  if(!lines.length)return null;
+  const cols=lines[0].split(',').map(s=>s.trim());
+  const wh=parseFloat(cols[6]);
+  const wd=parseFloat(cols[7]);
+  const ws=parseFloat(cols[8]);
+  const tw=parseFloat(cols[10]);
+  return{
+    wave_height: wh>-99?wh:null,
+    wave_direction: wd>-99?wd:null,
+    wind_speed: ws>-99?ws:null,
+    sea_surface_temperature: tw>-99?tw:null,
+  };
+}
+
+// Open-Meteo 폴백 (KMA API 실패 시)
+async function fetchWeatherOpenMeteo(){
+  const wxBtn=document.getElementById('ctrl-wx');
+  const results=await Promise.all(WX_SPOTS.map(async sp=>{
+    const[wx,marine]=await Promise.all([
+      fetch('https://api.open-meteo.com/v1/forecast'
+        +'?latitude='+sp.lat+'&longitude='+sp.lng
+        +'&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,'
+        +'precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,'
+        +'surface_pressure,precipitation_probability'
+        +'&wind_speed_unit=ms&timezone=Asia%2FSeoul&forecast_days=16')
+        .then(r=>r.json()).catch(()=>null),
+      fetch('https://marine-api.open-meteo.com/v1/marine'
+        +'?latitude='+sp.mlat+'&longitude='+sp.mlng
+        +'&current=wave_height,wave_direction,wave_period,'
+        +'swell_wave_height,swell_wave_direction,swell_wave_period'
+        +'&hourly=wave_height,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,sea_surface_temperature'
+        +'&timezone=Asia%2FSeoul&forecast_days=7')
+        .then(r=>r.json()).catch(()=>null),
+    ]);
+    return{sp,wx,marine};
+  }));
+  wxDataCache=results;
+  if(marineDetailOn)renderMarineDetail();
+}
+
+// 날씨·해양 데이터 fetch — KMA 우선, 실패 시 Open-Meteo 폴백
+async function fetchWeather(force){
+  const wxBtn=document.getElementById('ctrl-wx');
+  if(wxBtn)wxBtn.textContent='⏳ KMA';
+
+  // KMA 인증키가 설정된 경우 KMA API 먼저 시도
+  if(KMA_AUTH_KEY&&KMA_AUTH_KEY!=='YOUR_AUTH_KEY'){
+    const{date,time}=kmaBaseDateTime();
+    try{
+      const results=await Promise.all(WX_SPOTS.map(async sp=>{
+        const stnId=KMA_MARINE_STN[sp.id];
+        const[wx,marine,buoy]=await Promise.all([
+          fetchKmaSpot(sp,date,time).catch(()=>null),
+          fetch('https://marine-api.open-meteo.com/v1/marine'
+            +'?latitude='+sp.mlat+'&longitude='+sp.mlng
+            +'&current=wave_height,wave_direction,wave_period,'
+            +'swell_wave_height,swell_wave_direction,swell_wave_period'
+            +'&hourly=wave_height,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,sea_surface_temperature'
+            +'&timezone=Asia%2FSeoul&forecast_days=7')
+            .then(r=>r.json()).catch(()=>null),
+          stnId?fetchKmaSeaObs(stnId).catch(()=>null):Promise.resolve(null),
+        ]);
+        // KMA 부이 데이터로 marine 값 보정
+        if(marine&&buoy){
+          if(buoy.wave_height!=null&&marine.current)marine.current.wave_height=buoy.wave_height;
+          if(buoy.wave_direction!=null&&marine.current)marine.current.wave_direction=buoy.wave_direction;
+          if(buoy.sea_surface_temperature!=null){
+            const hi=new Date().getHours();
+            if(marine.hourly?.sea_surface_temperature)marine.hourly.sea_surface_temperature[hi]=buoy.sea_surface_temperature;
+          }
+        }
+        return{sp,wx,marine};
+      }));
+      const ok=results.filter(d=>d.wx&&d.wx.hourly).length;
+      if(ok>0){
+        wxDataCache=results;
+        saveWxCache(results);
+        if(marineDetailOn)renderMarineDetail();
+        return;
+      }
+      // KMA 0개 성공 → CORS 차단 등 → 폴백
+      console.warn('KMA API 응답 없음, Open-Meteo로 전환');
+    }catch(e){
+      console.warn('KMA 오류:',e.message,'→ Open-Meteo 폴백');
+    }
+  }
+
+  // Open-Meteo 폴백 (KMA 키 미설정 또는 실패 시)
+  if(wxBtn)wxBtn.textContent='⏳ 날씨';
+  try{
+    await fetchWeatherOpenMeteo();
+    // 성공 시 캐시 저장
+    if(wxDataCache) saveWxCache(wxDataCache);
+  }catch(e){
+    if(wxBtn)wxBtn.textContent='⚠️ 오프라인';
+    console.warn('날씨 전체 실패 — 캐시 시도:',e);
+    // 오프라인 대응: 마지막 캐시 로드
+    const cached=loadWxCache();
+    if(cached){
+      wxDataCache=cached;
+      if(marineDetailOn)renderMarineDetail();
+      showToast('📡 오프라인 — 최근 저장된 날씨 데이터 표시 중');
+    }
+  }
+}
+
+// ══ 지도로 이동 ════════════════════════════════════
+function goMap(idx){
+  switchTab('map');
+  setTimeout(()=>{
+    const m=spotMarkers[idx];
+    map.flyTo([m.sd.lat,m.sd.lng],14,{duration:.8});
+    setTimeout(()=>m.openPopup(),900);
+  },200);
+}
+function scrollId(id){
+  const el=document.getElementById(id);
+  if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('highlight');}
+}
+
+// ══ 낚시 필터 상태 ══════════════════════════════════
+let curFishRegion='all', curFishTime='all', curFishAccess='all', curFishFavorite=false;
+let favorites=new Set(JSON.parse(localStorage.getItem('fishing_favs')||'[]'));
+
+const TIME_META={
+  dawn: {label:'🌅 새벽·오전', color:'#e65100'},
+  night:{label:'🌙 야간',       color:'#283593'},
+  day:  {label:'☀️ 낮·오후',   color:'#558b2f'},
+};
+
+function setFishSpecies(species,btn){
+  document.querySelectorAll('[data-fish]').forEach(b=>{
+    b.classList.remove('on');b.style.background='';b.style.color='';b.style.borderColor='';
+  });
+  btn.classList.add('on');
+  const si=SPECIES_INFO[species];
+  const c=si?si.color:'#555';
+  btn.style.background=c;btn.style.color='#fff';btn.style.borderColor=c;
+  curFishSpecies=species; renderFishCards();
+}
+function setFishRegion(region,btn){
+  document.querySelectorAll('[data-fr]').forEach(b=>{
+    b.classList.remove('on');b.style.background='';b.style.color='';b.style.borderColor='';
+  });
+  btn.classList.add('on');
+  const cMap={east:'#1a73e8',west:'#0097a7',south:'#880e4f',jeju:'#f57c00',all:'#555'};
+  const c=cMap[region]||'#555';
+  btn.style.background=c;btn.style.color='#fff';btn.style.borderColor=c;
+  curFishRegion=region; renderFishCards();
+}
+function setFishTime(time,btn){
+  document.querySelectorAll('[data-time]').forEach(b=>{
+    b.classList.remove('on');b.style.background='';b.style.color='';b.style.borderColor='';
+  });
+  btn.classList.add('on');
+  const c=time==='all'?'#555':(TIME_META[time]?.color||'#555');
+  btn.style.background=c;btn.style.color='#fff';btn.style.borderColor=c;
+  curFishTime=time; renderFishCards();
+}
+
+// ── 접근방법 파싱 ──────────────────────────────────
+function getAccessType(terrain){
+  if(!terrain) return '방파제';
+  if(terrain.includes('선상')) return '선상';
+  if(terrain.includes('갯바위')) return '갯바위';
+  if(terrain.includes('방파제')||terrain.includes('방조제')) return '방파제';
+  if(terrain.includes('해수욕장')||terrain.includes('서프')||terrain.includes('모래')) return '도보';
+  return '방파제';
+}
+
+// ── 즐겨찾기 ──────────────────────────────────────
+function toggleFavorite(id){
+  if(favorites.has(id)){favorites.delete(id);}else{favorites.add(id);}
+  localStorage.setItem('fishing_favs',JSON.stringify([...favorites]));
+  // 버튼 UI 갱신
+  const btn=document.getElementById('fav-btn-'+id);
+  if(btn){btn.textContent=favorites.has(id)?'♥':'♡';btn.classList.toggle('active',favorites.has(id));}
+  if(curFishFavorite) renderFishCards();
+}
+function toggleFavFilter(btn){
+  curFishFavorite=!curFishFavorite;
+  btn.classList.toggle('on',curFishFavorite);
+  if(curFishFavorite){btn.style.background='#e91e63';btn.style.color='#fff';btn.style.borderColor='#e91e63';}
+  else{btn.style.background='';btn.style.color='';btn.style.borderColor='';}
+  renderFishCards();
+}
+
+// ── 접근방법 필터 ──────────────────────────────────
+function setFishAccess(access,btn){
+  document.querySelectorAll('[data-access]').forEach(b=>{
+    b.classList.remove('on');b.style.background='';b.style.color='';b.style.borderColor='';
+  });
+  btn.classList.add('on');
+  const c=access==='all'?'#555':'#4a148c';
+  btn.style.background=c;btn.style.color='#fff';btn.style.borderColor=c;
+  curFishAccess=access; renderFishCards();
+}
+
+// ── 금어기 버튼 표시 ───────────────────────────────
+function markBannedSpecies(){
+  const curMonth=new Date().getMonth()+1;
+  document.querySelectorAll('[data-fish]:not([data-fish="all"])').forEach(btn=>{
+    const sp=btn.dataset.fish;
+    const si=SPECIES_INFO[sp];
+    if(si&&si.banMonths&&si.banMonths.includes(curMonth)){
+      btn.dataset.banned='1';
+      btn.style.opacity='0.45';
+      btn.style.textDecoration='line-through';
+      btn.title='⛔ 현재 금어기 ('+si.ban+')';
+    }else{
+      btn.dataset.banned='';
+      btn.style.opacity='';
+      btn.style.textDecoration='';
+      btn.title='';
+    }
+  });
+}
+
+// ══ 풍랑특보 지도 마커 ═══════════════════════════════
+const SEA_ALERT_COORDS={
+  '동해':{lat:37.5,lng:130.6},
+  '서해':{lat:36.0,lng:124.8},
+  '남해':{lat:34.1,lng:128.8},
+  '제주':{lat:32.9,lng:126.4}
+};
+function classifyAlertSea(stn){
+  if(stn.includes('동해'))return '동해';
+  if(stn.includes('서해')||stn.includes('경기만')||stn.includes('인천'))return '서해';
+  if(stn.includes('남해')||stn.includes('여수')||stn.includes('완도')||stn.includes('거문')||stn.includes('통영')||stn.includes('거제'))return '남해';
+  if(stn.includes('제주')||stn.includes('마라도')||stn.includes('추자'))return '제주';
+  return null;
+}
+function renderAlertMarkers(items){
+  if(!alertLayer)return;
+  alertLayer.clearLayers();
+  const seaMap={};
+  items.forEach(item=>{
+    const msg=item.wrnMsg||'';
+    const stn=item.stnName||item.wrnStnName||'';
+    if(!msg.includes('풍랑'))return;
+    const sea=classifyAlertSea(stn);
+    if(!sea)return;
+    if(!seaMap[sea])seaMap[sea]={level:'주의보',areas:[]};
+    if(msg.includes('경보')&&!msg.includes('주의보'))seaMap[sea].level='경보';
+    if(!seaMap[sea].areas.includes(stn))seaMap[sea].areas.push(stn);
+  });
+  const hasAlert=Object.keys(seaMap).length>0;
+  const badge=document.getElementById('alert-badge');
+  if(badge)badge.style.display=hasAlert?'block':'none';
+  Object.entries(seaMap).forEach(([sea,info])=>{
+    const c=SEA_ALERT_COORDS[sea];
+    if(!c)return;
+    const isGb=info.level==='경보';
+    const color=isGb?'#b71c1c':'#e65100';
+    L.circleMarker([c.lat,c.lng],{radius:isGb?28:22,fillColor:color,color:'#fff',weight:2.5,fillOpacity:0.88})
+      .bindPopup(`<b style="color:${color}">⚠️ ${sea} 풍랑${info.level}</b><br><small>${info.areas.join('<br>')}</small>`)
+      .addTo(alertLayer);
+    L.marker([c.lat+0.35,c.lng],{icon:L.divIcon({
+      html:`<div style="background:${color};color:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3)">풍랑${info.level}</div>`,
+      className:'',iconAnchor:[30,0]
+    })}).addTo(alertLayer);
+  });
+}
+async function fetchAlerts(){
+  if(!WORKER_URL)return;
+  try{
+    const res=await fetch(WORKER_URL+'/api/alert');
+    const data=await res.json();
+    let items=data?.response?.body?.items?.item||[];
+    if(!Array.isArray(items))items=[items];
+    renderAlertMarkers(items);
+  }catch(e){console.warn('특보 fetch 실패:',e.message);}
+}
+
+// ══ KHOA 조위예보 ════════════════════════════════════
+const KHOA_STN={east:'DT_0061',west:'DT_0001',south:'DT_0019',jeju:'DT_0027',all:'DT_0061'};
+const KHOA_STN_NAME={DT_0061:'속초',DT_0001:'인천',DT_0019:'부산',DT_0027:'제주'};
+async function fetchTideKhoa(sea){
+  if(!WORKER_URL)return;
+  const stnId=KHOA_STN[sea]||'DT_0061';
+  const d=new Date();
+  const dateStr=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  try{
+    const res=await fetch(WORKER_URL+'/api/tide?obs_post_id='+stnId+'&date='+dateStr);
+    const data=await res.json();
+    const tides=data?.result?.data||[];
+    if(!tides.length)return;
+    const fmt=t=>t.slice(0,2)+':'+t.slice(2);
+    const hi=tides.filter(t=>t.hl_code==='HH').map(t=>fmt(t.tide_time)).join(', ');
+    const lo=tides.filter(t=>t.hl_code==='LL').map(t=>fmt(t.tide_time)).join(', ');
+    if(!hi&&!lo)return;
+    const bar=document.getElementById('khoa-tide-bar');
+    if(bar)bar.style.display='block';
+    const hiEl=document.getElementById('khoa-hi');
+    const loEl=document.getElementById('khoa-lo');
+    const stnEl=document.getElementById('khoa-station');
+    if(hiEl)hiEl.textContent=hi||'-';
+    if(loEl)loEl.textContent=lo||'-';
+    if(stnEl)stnEl.textContent=KHOA_STN_NAME[stnId]+' 기준';
+    // 근사값 안내문 숨기기
+    const note=document.getElementById('tide-approx-note');
+    if(note)note.style.display='none';
+  }catch(e){console.warn('KHOA tide 실패:',e.message);}
+}
+
+// ── 물때 위젯 업데이트 ────────────────────────────
+function updateTideWidget(){
+  try{
+    const mul=calcMulTte(0);
+    const numEl=document.getElementById('tw-num');
+    const tagEl=document.getElementById('tw-tag');
+    const infoEl=document.getElementById('tw-info');
+    const barEl=document.getElementById('tide-widget-bar');
+    if(!numEl) return;
+    numEl.textContent=mul.mul;
+    numEl.style.color=mul.mulColor;
+    tagEl.textContent=mul.t;
+    tagEl.style.background=mul.mulColor+'20';
+    tagEl.style.color=mul.mulColor;
+    infoEl.textContent=mul.s+' · '+mul.f;
+    barEl.style.borderColor=mul.mulColor+'80';
+  }catch(_){}
+  // KHOA 실제 조위예보 (Worker 연동 시)
+  fetchTideKhoa(curFishRegion||'all');
+}
+
+// ══ 낚시 카드 렌더 ══════════════════════════════════
+const SEA_COLORS={east:'#1a73e8',west:'#0097a7',south:'#880e4f',jeju:'#f57c00'};
+const SEA_NAMES={east:'동해',west:'서해',south:'남해',jeju:'제주'};
+const SEA_ORDER=['east','west','south','jeju'];
+const SEA_REGION_ORDER={
+  east:['goseong','sokcho','gangneung','samcheok','uljin','yeongdeok','pohang'],
+  west:['incheon','dangjin','hongseong','taean','buan','gunsan'],
+  south:['busan','yeosu','tongyeong','wando','geoje','haenam'],
+  jeju:['jeju']
+};
+const REGION_LABELS={
+  goseong:'강원 고성',sokcho:'강원 속초',gangneung:'강원 강릉',samcheok:'강원 삼척',
+  uljin:'경북 울진',yeongdeok:'경북 영덕',pohang:'경북 포항',
+  incheon:'인천',dangjin:'충남 당진',hongseong:'충남 홍성',taean:'충남 태안',
+  buan:'전북 부안',gunsan:'전북 군산',
+  busan:'부산',yeosu:'전남 여수',tongyeong:'경남 통영',wando:'전남 완도',
+  geoje:'경남 거제',haenam:'전남 해남',jeju:'제주도'
+};
+
+function renderFishCards(){
+  const wrap=document.getElementById('fish-cards-wrap');
+  const filtered=SPOTS.filter(s=>
+    (curFishRegion==='all'||REGION_SEA[s.region]===curFishRegion)&&
+    (curFishTime==='all'||s.timeSlots.includes(curFishTime))&&
+    (curFishSpecies==='all'||s.fish.some(f=>f.includes(curFishSpecies)||curFishSpecies.includes(f)))&&
+    (curFishAccess==='all'||getAccessType(s.terrain)===curFishAccess)&&
+    (!curFishFavorite||favorites.has(s.id))
+  );
+  // 복합 필터 표시
+  const activeTags=[];
+  if(curFishSpecies!=='all')activeTags.push('어종:'+curFishSpecies);
+  if(curFishRegion!=='all')activeTags.push('바다:'+SEA_NAMES[curFishRegion]);
+  if(curFishTime!=='all')activeTags.push('시간:'+TIME_META[curFishTime].label);
+  if(curFishAccess!=='all')activeTags.push('접근:'+curFishAccess);
+  if(curFishFavorite)activeTags.push('즐겨찾기');
+  const filterTxt=activeTags.length?' ['+activeTags.join(' + ')+']':'';
+  document.getElementById('fish-count').textContent=
+    `${filtered.length}개 포인트 표시 중 (전체 ${SPOTS.length}개)${filterTxt}`;
+
+  // 어종 정보 카드
+  let speciesHtml='';
+  if(curFishSpecies!=='all'){
+    const si=SPECIES_INFO[curFishSpecies]||{};
+    const curMonth=new Date().getMonth()+1;
+    const isBanned=si.banMonths&&si.banMonths.includes(curMonth);
+    const banBar=isBanned?`<div class="ban-bar">⛔ 현재 금어기 (${si.ban}) — 포획·소지 금지</div>`:'';
+    speciesHtml=`<div class="species-card" style="background:${si.color}12;border-left-color:${si.color||'#888'}">
+      ${banBar}
+      <div class="species-card-title" style="color:${si.color}">${si.icon||'🐟'} ${curFishSpecies}</div>
+      <div class="species-meta-grid">
+        <div class="species-meta-item"><div class="species-meta-label">적정 수온</div><div class="species-meta-val">${si.temp||'-'}</div></div>
+        <div class="species-meta-item"><div class="species-meta-label">피크 시즌</div><div class="species-meta-val">${si.peak||'-'}</div></div>
+        <div class="species-meta-item"><div class="species-meta-label">금어기</div><div class="species-meta-val ${si.ban&&si.ban!=='없음'?'species-ban':'species-ok'}">${si.ban||'-'}</div></div>
+        <div class="species-meta-item"><div class="species-meta-label">포획금지 체장</div><div class="species-meta-val">${si.size||'-'}</div></div>
+      </div>
+      ${si.habitat?`<div style="font-size:11px;color:#37474f;margin-top:6px;padding:5px 8px;background:#e8f5e9;border-radius:6px">📍 <strong>주 서식지</strong> ${escHtml(si.habitat)}</div>`:''}
+      <div style="font-size:11px;color:#555;margin-top:5px;padding:6px 8px;background:rgba(255,255,255,.6);border-radius:6px">💡 ${si.note||''}</div>
+      <div style="font-size:10px;color:#aaa;margin-top:4px">※ 금어기·체장은 수산자원관리법 기준. 출조 전 mof.go.kr 최신 고시 확인 권장</div>
+    </div>`;
+  }
+
+  if(!filtered.length){
+    wrap.innerHTML=speciesHtml+'<div class="empty-msg">조건에 맞는 포인트가 없습니다.<br>다른 필터를 선택해 보세요.</div>';
+    return;
+  }
+
+  // 어종 필터 활성화 시: 어종 헤더 + 바다별 그룹
+  if(curFishSpecies!=='all'){
+    let html=speciesHtml;
+    SEA_ORDER.forEach(sea=>{
+      const grp=filtered.filter(s=>REGION_SEA[s.region]===sea);
+      if(!grp.length) return;
+      html+=`<div class="region-hd"><span class="region-badge" style="background:${SEA_COLORS[sea]}">${SEA_NAMES[sea]}</span>
+             <h2>${grp.length}개 포인트</h2></div><div class="card-list">`;
+      grp.forEach(s=>{ html+=fishCardHTML(s); });
+      html+='</div><div class="divider"></div>';
+    });
+    wrap.innerHTML=html.replace(/<div class="divider"><\/div>$/,''); return;
+  }
+
+  // 시간대 필터 활성화 시
+  if(curFishTime!=='all'&&curFishRegion==='all'){
+    const tm=TIME_META[curFishTime];
+    let html=`<div class="region-hd">
+      <span class="region-badge" style="background:${tm.color}">${tm.label}</span>
+      <h2>해당 시간대 포인트 ${filtered.length}곳</h2></div><div class="card-list">`;
+    filtered.forEach(s=>{ html+=fishCardHTML(s); });
+    html+='</div>';
+    wrap.innerHTML=html; return;
+  }
+
+  // 그 외: 바다 → 세부지역 그룹
+  let html='';
+  const seaFilter=curFishRegion!=='all'?[curFishRegion]:SEA_ORDER;
+  seaFilter.forEach(sea=>{
+    const seaSpots=filtered.filter(s=>REGION_SEA[s.region]===sea);
+    if(!seaSpots.length) return;
+    const sc=SEA_COLORS[sea]||'#888';
+    html+=`<div class="region-hd" style="background:${sc}10;border-left:4px solid ${sc};padding-left:12px">
+      <span class="region-badge" style="background:${sc}">${SEA_NAMES[sea]}</span>
+      <h2>${SEA_NAMES[sea]} 포인트 ${seaSpots.length}곳</h2></div>`;
+    const rOrder=SEA_REGION_ORDER[sea]||[];
+    const rInFiltered=[...new Set(seaSpots.map(s=>s.region))];
+    const ordered=[...rOrder.filter(r=>rInFiltered.includes(r)),...rInFiltered.filter(r=>!rOrder.includes(r))];
+    ordered.forEach(r=>{
+      const grp=seaSpots.filter(s=>s.region===r);
+      if(!grp.length) return;
+      const c=COLORS[r]||sc;
+      html+=`<div class="region-hd" style="padding-left:20px"><span class="region-badge" style="background:${c};font-size:10px">${RNAMES[r]||r}</span>
+             <h2 style="font-size:12px">${REGION_LABELS[r]||r}</h2></div><div class="card-list">`;
+      grp.forEach(s=>{ html+=fishCardHTML(s); });
+      html+='</div>';
+    });
+    html+='<div class="divider"></div>';
+  });
+  wrap.innerHTML=html.replace(/<div class="divider"><\/div>$/,'');
+}
+
+function fishCardHTML(s){
+  const ft=s.fish.map(f=>`<span class="ftag">${f}</span>`).join('');
+  const tb=s.timeSlots.map(t=>{
+    const m=TIME_META[t];
+    return `<span style="background:${m.color}18;color:${m.color};border-radius:10px;
+      padding:1px 8px;font-size:10px;font-weight:700">${m.label}</span>`;
+  }).join('');
+  const nv=`https://map.naver.com/v5/search/${encodeURIComponent(s.addr)}`;
+  const kk=`https://map.kakao.com/link/to/${encodeURIComponent(s.name)},${s.lat},${s.lng}`;
+  const acc=getAccessType(s.terrain);
+  const accColor={'도보':'#43a047','방파제':'#1976d2','갯바위':'#7b1fa2','선상':'#0277bd'}[acc]||'#555';
+  const isFav=favorites.has(s.id);
+  const hasNote=!!(localStorage.getItem('note_'+s.id)||'').trim();
+  return `<div class="card fish-card ${s.region}" id="fc-${s.id}">
+    <div class="card-header">
+      <div class="card-title">${s.num} ${s.name}</div>
+      <div class="badge-row">${tb}${s.star?'<span class="star-badge">★ 추천</span>':''}</div>
+    </div>
+    <div class="card-body">
+      <div class="info-row"><span class="info-label">주소</span><span class="info-val">${s.addr}</span></div>
+      <div class="info-row"><span class="info-label">어종</span><div class="tags">${ft}</div></div>
+      <div class="info-row"><span class="info-label">채비</span><span class="info-val">${s.gear}</span></div>
+      <div class="info-row"><span class="info-label">지형</span><span class="info-val">${s.terrain}<span class="access-badge" style="background:${accColor}20;color:${accColor}">${acc}</span></span></div>
+      <div class="timing-box">${s.timing}</div>
+      <div class="tip-box">${s.tip}</div>
+    </div>
+    <div class="card-nav-row">
+      <a href="${nv}" target="_blank" class="nav-btn nv">📍 네이버</a>
+      <a href="${kk}" target="_blank" class="nav-btn kk">🗺 카카오</a>
+      <a href="https://search.naver.com/search.naver?query=${encodeURIComponent(s.name+' 조황')}" target="_blank" class="nav-btn jo">🔍 조황</a>
+      <button class="nav-btn wdy" onclick="focusWindy(${s.lat},${s.lng})">🌊 Windy</button>
+      <button class="btn-go" onclick="goMap(${s.id})" style="flex:1">🗺️ 지도</button>
+      <button id="fav-btn-${s.id}" class="nav-btn fav${isFav?' active':''}" onclick="toggleFavorite(${s.id})">${isFav?'♥':'♡'}</button>
+    </div>
+    <div class="card-nav-row" style="margin-top:4px">
+      <button class="nav-btn memo${hasNote?' has-note':''}" id="memo-btn-${s.id}" onclick="openNote(${s.id},'${escHtml(s.name)}')">${hasNote?'📝 메모있음':'📝 메모'}</button>
+      <button class="nav-btn share" onclick="shareSpot(${s.id})">🔗 공유</button>
+    </div>
+  </div>`;
+}
+
+
+// ══ 초기 필터 버튼 색상 설정 ═══════════════════════
+function initFilterColors(){
+  const dr=document.querySelector('[data-region="all"]');
+  if(dr) dr.style.cssText='background:#555;color:#fff;border-color:#555';
+  const dc=document.querySelector('[data-cat="all"]');
+  if(dc) dc.style.cssText='background:#555;color:#fff;border-color:#555';
+}
+
+function initFishFilterColors(){
+  const allFr=document.querySelector('[data-fr="all"]');
+  if(allFr) allFr.style.cssText='background:#555;color:#fff;border-color:#555';
+  const allTm=document.querySelector('[data-time="all"]');
+  if(allTm) allTm.style.cssText='background:#555;color:#fff;border-color:#555';
+}
+
+// ══ 포인트 메모 ══════════════════════════════════
+let _noteId=null;
+function openNote(id,name){
+  _noteId=id;
+  document.getElementById('note-modal-title').textContent='📝 '+name+' 메모';
+  document.getElementById('note-textarea').value=localStorage.getItem('note_'+id)||'';
+  document.getElementById('note-modal').classList.add('open');
+}
+function saveNote(){
+  if(_noteId===null) return;
+  const txt=document.getElementById('note-textarea').value.trim();
+  if(txt) localStorage.setItem('note_'+_noteId,txt);
+  else localStorage.removeItem('note_'+_noteId);
+  closeNote();
+  renderFishCards();
+}
+function deleteNote(){
+  if(_noteId===null) return;
+  localStorage.removeItem('note_'+_noteId);
+  closeNote();
+  renderFishCards();
+}
+function closeNote(){
+  document.getElementById('note-modal').classList.remove('open');
+  _noteId=null;
+}
+document.addEventListener('click',e=>{
+  const m=document.getElementById('note-modal');
+  if(m&&e.target===m) closeNote();
+});
+
+// ══ URL 공유 ══════════════════════════════════
+function shareSpot(id){
+  const s=SPOTS.find(x=>x.id===id);
+  if(!s) return;
+  const base=location.href.split('?')[0].split('#')[0];
+  const url=base+'?spot='+id;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>showToast('🔗 링크가 클립보드에 복사됐습니다'));
+  } else {
+    prompt('아래 링크를 복사하세요:', url);
+  }
+}
+function showToast(msg){
+  let t=document.getElementById('toast-el');
+  if(!t){t=document.createElement('div');t.id='toast-el';
+    Object.assign(t.style,{position:'fixed',bottom:'80px',left:'50%',transform:'translateX(-50%)',
+      background:'rgba(0,0,0,.8)',color:'#fff',padding:'10px 18px',borderRadius:'24px',
+      fontSize:'13px',zIndex:'99999',pointerEvents:'none',whiteSpace:'nowrap'});
+    document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._tid);t._tid=setTimeout(()=>{t.style.opacity='0';},2200);
+}
+
+// ══ 출조 일지 ════════════════════════════════════
+function addLog(){
+  const date=document.getElementById('log-date').value;
+  const spot=document.getElementById('log-spot').value.trim();
+  const fish=document.getElementById('log-fish').value.trim();
+  const weather=document.getElementById('log-weather').value.trim();
+  const memo=document.getElementById('log-memo').value.trim();
+  if(!date||!spot){showToast('날짜와 포인트명은 필수입니다');return;}
+  const logs=JSON.parse(localStorage.getItem('fishing_logs')||'[]');
+  logs.unshift({date,spot,fish,weather,memo,ts:Date.now()});
+  localStorage.setItem('fishing_logs',JSON.stringify(logs));
+  document.getElementById('log-date').value='';
+  document.getElementById('log-spot').value='';
+  document.getElementById('log-fish').value='';
+  document.getElementById('log-weather').value='';
+  document.getElementById('log-memo').value='';
+  renderLogs();
+  showToast('📓 일지가 저장됐습니다');
+}
+function deleteLog(ts){
+  const logs=JSON.parse(localStorage.getItem('fishing_logs')||'[]').filter(l=>l.ts!==ts);
+  localStorage.setItem('fishing_logs',JSON.stringify(logs));
+  renderLogs();
+}
+function renderLogs(){
+  const wrap=document.getElementById('log-list');
+  if(!wrap) return;
+  const logs=JSON.parse(localStorage.getItem('fishing_logs')||'[]');
+  if(!logs.length){wrap.innerHTML='<div class="log-empty">📓 아직 출조 일지가 없습니다.<br>첫 번째 출조를 기록해보세요!</div>';return;}
+  wrap.innerHTML=logs.map(l=>`
+    <div class="log-item">
+      <div class="log-item-header">
+        <span class="log-item-date">${l.date}</span>
+        <span class="log-item-weather">${l.weather||''}</span>
+        <button class="log-item-del" onclick="deleteLog(${l.ts})">🗑 삭제</button>
+      </div>
+      <div class="log-item-spot">📍 ${escHtml(l.spot)}</div>
+      ${l.fish?`<div class="log-item-fish">🐟 ${escHtml(l.fish)}</div>`:''}
+      ${l.memo?`<div class="log-item-memo">${escHtml(l.memo)}</div>`:''}
+    </div>`).join('');
+}
+
+// ══ 채비 계산기 ══════════════════════════════════
+const GEAR_DB={
+  광어:{방파제:'PE 0.8~1.5호 / 리더 카본 2~3호(8~12lb) / 지그헤드 7~14g / 워터멜론·내추럴 웜 3~4인치',
+        서프:'PE 1.0~1.5호 / 리더 카본 2.5~3호 / 서프지그헤드 20~30g / 싱킹미노우 14~16cm',
+        갯바위:'PE 1.5~2.0호 / 리더 카본 3~4호 / 프리리그·다운샷 10~18g',
+        선상:'PE 1.0~1.5호 / 리더 카본 3호 / 슬로우지그 40~80g'},
+  농어:{방파제:'PE 1.0~2.0호 / 리더 나일론 4~5호(16~20lb) / 싱킹미노우 12~14cm / 스위밍지그 20~30g',
+        서프:'PE 1.5~2.0호 / 리더 4~5호 / 헤비미노우 14~18cm',
+        갯바위:'PE 1.5~2.5호 / 리더 5~6호 / 싱킹펜슬 18cm / 포퍼',
+        선상:'PE 1.5~2.5호 / 리더 5호 / 스위밍지그 40~60g / 미노우 14cm'},
+  삼치:{방파제:'PE 1.0~1.5호 / 리더 카본 2~3호 / 메탈지그 20~40g / 고속 리트리브',
+        서프:'PE 1.0~1.5호 / 리더 2~3호 / 메탈지그 20~30g',
+        갯바위:'PE 1.5호 / 리더 3호 / 메탈지그 30~50g',
+        선상:'PE 1.5호 / 리더 3호 / 메탈지그 30~60g / 트레블훅 추가'},
+  방어:{방파제:'PE 2.0~3.0호 / 리더 나일론 8~10호(30~40lb) / 슬로우지그 100~150g',
+        갯바위:'PE 2.0~3.0호 / 리더 8~10호 / 팝퍼·슬로우지그',
+        선상:'PE 2.0~3.0호 / 리더 8~10호 / 슬로우지그 100~200g / 어시스트훅 필수',
+        서프:'PE 2.5호 / 리더 8호 / 메탈지그 80~120g'},
+  볼락:{방파제:'PE 0.3~0.6호 / 리더 카본 0.8~1.2호 / 지그헤드 1~3g / 웜 1.5~2.5인치',
+        갯바위:'PE 0.4~0.6호 / 리더 1.0~1.5호 / 스플릿샷 1~2g / 웜',
+        서프:'PE 0.4~0.6호 / 리더 1.0호 / 지그헤드 2~5g',
+        선상:'PE 0.4~0.6호 / 리더 1.0~1.5호 / 지그헤드 3~5g'},
+  감성돔:{방파제:'카본 1.5~2.5호 릴찌낚시 / 봉돌 B~2B / 크릴·갯지렁이',
+          갯바위:'카본 1.5~2.5호 릴찌 / 봉돌 B / 크릴·갯지렁이 반유동',
+          서프:'원투 카본 3~4호 / 20~30호 봉돌 / 갯지렁이',
+          선상:'타이라바 40~80g / PE 0.8~1.5호 / 리더 2~3호'},
+  무늬오징어:{방파제:'PE 0.6~0.8호 / 리더 카본 1.5~2.0호 / 에기 3.0~3.5호',
+             갯바위:'PE 0.6~0.8호 / 리더 2.0호 / 에기 3.5호 / 야간 야광에기',
+             서프:'PE 0.8호 / 리더 2.0호 / 에기 3.0~3.5호',
+             선상:'PE 0.8호 / 리더 2.0호 / 에기 3.5~4.0호'},
+  참돔:{방파제:'카본 1.5~2.0호 / 릴찌낚시 / 크릴',
+        갯바위:'카본 2.0~2.5호 / 릴찌 / 크릴·전갱이 미끼',
+        선상:'PE 0.8~1.2호 타이라바 / 리더 카본 2~3호 / 타이라바 60~120g',
+        서프:'카본 3호 원투 / 20~30호 봉돌 / 갯지렁이'},
+};
+function calcGear(){
+  const fish=document.getElementById('calc-fish').value;
+  const terrain=document.getElementById('calc-terrain').value;
+  const r=document.getElementById('calc-result');
+  if(!fish){r.style.display='none';return;}
+  const db=GEAR_DB[fish];
+  if(!db){r.style.display='none';return;}
+  const rec=db[terrain]||Object.values(db)[0];
+  r.style.display='block';
+  r.innerHTML=`<b>${fish} / ${terrain}</b><br>${rec}`;
+}
+function calcPE(){
+  const v=parseFloat(document.getElementById('pe-num').value);
+  const r=document.getElementById('pe-result');
+  if(!v||v<=0){r.style.display='none';return;}
+  const kg=Math.round(v*9.07*10)/10; // PE 1호 ≈ 9.07kg (규격)
+  const lb=Math.round(kg*2.205*10)/10;
+  r.style.display='block';
+  r.innerHTML=`PE ${v}호 ≈ <b>${kg}kg (${lb}lb)</b> 인장강도`;
+}
+function calcCarbon(){
+  const v=parseFloat(document.getElementById('carbon-num').value);
+  const r=document.getElementById('carbon-result');
+  if(!v||v<=0){r.style.display='none';return;}
+  const kg=Math.round(v*0.454*2.7*10)/10; // 카본 1호 ≈ 0.454kg 기준
+  const lb=Math.round(kg*2.205*10)/10;
+  r.style.display='block';
+  r.innerHTML=`카본 ${v}호 ≈ <b>${kg}kg (${lb}lb)</b> 인장강도<br><span style="font-size:11px;font-weight:400;color:#555">※ 제조사별 ±15% 오차 있음</span>`;
+}
+
+// ══ 내 포인트 추가 ════════════════════════════════
+let customSpots=JSON.parse(localStorage.getItem('custom_spots')||'[]');
+function addCustomSpot(){
+  const name=document.getElementById('cs-name').value.trim();
+  const lat=parseFloat(document.getElementById('cs-lat').value);
+  const lng=parseFloat(document.getElementById('cs-lng').value);
+  const fish=document.getElementById('cs-fish').value.trim();
+  const memo=document.getElementById('cs-memo').value.trim();
+  if(!name){showToast('포인트명을 입력하세요');return;}
+  if(!lat||!lng){showToast('위도·경도를 입력하세요');return;}
+  customSpots.push({id:'c'+Date.now(),name,lat,lng,fish,memo});
+  localStorage.setItem('custom_spots',JSON.stringify(customSpots));
+  ['cs-name','cs-lat','cs-lng','cs-fish','cs-memo'].forEach(id=>{document.getElementById(id).value='';});
+  renderCustomSpots();
+  showToast('📍 포인트가 추가됐습니다');
+}
+function deleteCustomSpot(id){
+  customSpots=customSpots.filter(s=>s.id!==id);
+  localStorage.setItem('custom_spots',JSON.stringify(customSpots));
+  renderCustomSpots();
+}
+function goCustomSpot(lat,lng){
+  switchTab('map');
+  setTimeout(()=>{map.setView([lat,lng],13);},200);
+}
+function renderCustomSpots(){
+  const wrap=document.getElementById('cs-list');
+  if(!wrap) return;
+  customSpots=JSON.parse(localStorage.getItem('custom_spots')||'[]');
+  if(!customSpots.length){wrap.innerHTML='<div style="font-size:12px;color:#aaa;text-align:center;padding:16px">추가된 포인트가 없습니다</div>';return;}
+  wrap.innerHTML=customSpots.map(s=>`
+    <div class="cs-item">
+      <div class="cs-item-info">
+        <div class="cs-item-name">📍 ${escHtml(s.name)}</div>
+        <div class="cs-item-fish">${s.fish?'🐟 '+escHtml(s.fish):''} ${s.memo?'· '+escHtml(s.memo):''}</div>
+      </div>
+      <div class="cs-item-btns">
+        <button class="cs-go-btn" onclick="goCustomSpot(${s.lat},${s.lng})">지도</button>
+        <button class="cs-del-btn" onclick="deleteCustomSpot('${s.id}')">삭제</button>
+      </div>
+    </div>`).join('');
+}
+
+// ══ 날씨 오프라인 캐싱 ════════════════════════════
+const WX_CACHE_KEY='wx_last_cache';
+const WX_CACHE_TTL=6*60*60*1000; // 6시간
+function saveWxCache(data){
+  try{localStorage.setItem(WX_CACHE_KEY,JSON.stringify({ts:Date.now(),data}));}catch(_){}
+}
+function loadWxCache(){
+  try{
+    const raw=localStorage.getItem(WX_CACHE_KEY);
+    if(!raw) return null;
+    const obj=JSON.parse(raw);
+    if(Date.now()-obj.ts>WX_CACHE_TTL) return null;
+    return obj.data;
+  }catch(_){return null;}
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  initMap(); renderFishCards(); initFilterColors(); initFishFilterColors();
+  markBannedSpecies(); updateTideWidget();
+  // URL로 특정 포인트 공유됐을 때 자동 이동
+  const urlSpotId=new URLSearchParams(location.search).get('spot');
+  if(urlSpotId!==null){
+    const sid=parseInt(urlSpotId);
+    const sp=SPOTS.find(s=>s.id===sid);
+    if(sp){switchTab('fish');setTimeout(()=>{const el=document.getElementById('fc-'+sid);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},400);}
+  }
+  // 로그 날짜 기본값 오늘
+  const di=document.getElementById('log-date');
+  if(di){const now=new Date();di.value=now.toISOString().slice(0,10);}
+  fetchWeather(false);
+  wxFetched=true;
+  fetchAlerts();
+});
+
+// ══ PWA / 홈 화면 추가 ═════════════════════════════════════════
+(function initPWA(){
+  // 1) Canvas로 앱 아이콘 생성 — 루어낚시 커스텀 그래픽
+  function drawFishIcon(canvas,S){
+    const ctx=canvas.getContext('2d'),r=S/192;
+    // 배경: 딥네이비 → 오션블루 그라디언트
+    const bg=ctx.createLinearGradient(0,0,S*0.35,S);
+    bg.addColorStop(0,'#0a2d73');bg.addColorStop(1,'#0277bd');
+    ctx.fillStyle=bg;ctx.beginPath();ctx.roundRect(0,0,S,S,38*r);ctx.fill();
+    // 상단 유리질 하이라이트
+    const hl=ctx.createRadialGradient(S*0.3,S*0.22,0,S*0.3,S*0.22,S*0.65);
+    hl.addColorStop(0,'rgba(255,255,255,0.13)');hl.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=hl;ctx.beginPath();ctx.roundRect(0,0,S,S,38*r);ctx.fill();
+    // 파도 1 (진한 청색)
+    ctx.fillStyle='rgba(1,87,155,0.68)';
+    ctx.beginPath();ctx.moveTo(0,S*0.72);
+    ctx.bezierCurveTo(S*0.22,S*0.60,S*0.44,S*0.80,S*0.66,S*0.68);
+    ctx.bezierCurveTo(S*0.80,S*0.60,S*0.92,S*0.68,S,S*0.65);
+    ctx.lineTo(S,S);ctx.lineTo(0,S);ctx.fill();
+    // 파도 2 (흰색 거품)
+    ctx.fillStyle='rgba(255,255,255,0.10)';
+    ctx.beginPath();ctx.moveTo(0,S*0.84);
+    ctx.bezierCurveTo(S*0.18,S*0.76,S*0.38,S*0.89,S*0.58,S*0.81);
+    ctx.bezierCurveTo(S*0.72,S*0.75,S*0.88,S*0.84,S,S*0.81);
+    ctx.lineTo(S,S);ctx.lineTo(0,S);ctx.fill();
+    // ── 물고기 ──────────────────────────────────
+    const bx=S*0.50,by=S*0.43,bw=S*0.30,bh=S*0.17;
+    // 몸통
+    ctx.fillStyle='#ffffff';
+    ctx.shadowColor='rgba(0,30,80,0.40)';ctx.shadowBlur=9*r;
+    ctx.beginPath();
+    ctx.moveTo(bx-bw,by);
+    ctx.bezierCurveTo(bx-bw*0.6,by-bh*1.2,bx+bw*0.15,by-bh*1.35,bx+bw*0.55,by-bh*0.70);
+    ctx.lineTo(bx+bw,by-bh*1.52);     // 꼬리 위 끝
+    ctx.lineTo(bx+bw*0.72,by);         // 꼬리 중앙 홈
+    ctx.lineTo(bx+bw,by+bh*1.52);     // 꼬리 아래 끝
+    ctx.lineTo(bx+bw*0.55,by+bh*0.70);
+    ctx.bezierCurveTo(bx+bw*0.15,by+bh*1.35,bx-bw*0.6,by+bh*1.2,bx-bw,by);
+    ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+    // 등지느러미
+    ctx.fillStyle='rgba(255,255,255,0.72)';
+    ctx.beginPath();
+    ctx.moveTo(bx-bw*0.05,by-bh*1.28);
+    ctx.quadraticCurveTo(bx+bw*0.08,by-bh*2.30,bx+bw*0.22,by-bh*1.70);
+    ctx.quadraticCurveTo(bx+bw*0.33,by-bh*1.42,bx+bw*0.43,by-bh*1.28);
+    ctx.fill();
+    // 가슴지느러미
+    ctx.fillStyle='rgba(255,255,255,0.52)';
+    ctx.beginPath();
+    ctx.moveTo(bx-bw*0.08,by+bh*0.20);
+    ctx.quadraticCurveTo(bx-bw*0.04,by+bh*1.10,bx+bw*0.15,by+bh*0.86);
+    ctx.quadraticCurveTo(bx+bw*0.12,by+bh*0.30,bx+bw*0.04,by+bh*0.20);
+    ctx.fill();
+    // 비늘 곡선 3줄
+    ctx.strokeStyle='rgba(13,71,161,0.26)';ctx.lineWidth=1.8*r;
+    [bw*0.64,bw*0.34,bw*0.05].forEach(dx=>{
+      ctx.beginPath();ctx.arc(bx-dx,by,bh*0.86,Math.PI*0.35,Math.PI*0.75);ctx.stroke();
+    });
+    // 눈 (짙은 파랑)
+    ctx.fillStyle='#0a2472';
+    ctx.beginPath();ctx.arc(bx-bw*0.60,by-bh*0.15,7*r,0,Math.PI*2);ctx.fill();
+    // 눈 반짝임
+    ctx.fillStyle='rgba(255,255,255,0.90)';
+    ctx.beginPath();ctx.arc(bx-bw*0.63,by-bh*0.29,2.5*r,0,Math.PI*2);ctx.fill();
+    // ── 루어 (금색 물방울) ────────────────────
+    const lx=bx-bw-15*r,ly=by;
+    ctx.fillStyle='#FFD740';
+    ctx.shadowColor='rgba(255,200,0,0.55)';ctx.shadowBlur=7*r;
+    ctx.beginPath();ctx.ellipse(lx,ly,7*r,11*r,0,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+    // 루어 반짝임
+    ctx.fillStyle='rgba(255,255,255,0.58)';
+    ctx.beginPath();ctx.ellipse(lx-2*r,ly-3*r,2.5*r,4.5*r,0,0,Math.PI*2);ctx.fill();
+    // 훅 (낚싯바늘 곡선)
+    ctx.strokeStyle='#FFD740';ctx.lineWidth=2.6*r;ctx.lineCap='round';
+    ctx.beginPath();ctx.arc(lx-9*r,ly+14*r,9*r,-Math.PI*0.05,Math.PI*0.85);ctx.stroke();
+    // ── 낚싯줄 (점선) ────────────────────────
+    ctx.strokeStyle='rgba(255,255,255,0.40)';ctx.lineWidth=1.8*r;
+    ctx.setLineDash([5*r,3.5*r]);
+    ctx.beginPath();ctx.moveTo(S*0.84,S*0.06);
+    ctx.quadraticCurveTo(S*0.15,S*0.28,lx,ly);ctx.stroke();
+    ctx.setLineDash([]);
+    // 낚싯대 끝 (금빛 점)
+    ctx.fillStyle='#FFD740';
+    ctx.shadowColor='rgba(255,210,0,0.7)';ctx.shadowBlur=6*r;
+    ctx.beginPath();ctx.arc(S*0.84,S*0.06,4*r,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+    // 물거품 3개
+    [[S*0.76,S*0.58,4*r],[S*0.83,S*0.50,2.5*r],[S*0.71,S*0.53,3*r]].forEach(([x,y,br])=>{
+      ctx.strokeStyle='rgba(255,255,255,0.32)';ctx.lineWidth=1.5*r;
+      ctx.beginPath();ctx.arc(x,y,br,0,Math.PI*2);ctx.stroke();
+    });
+  }
+
+  const canvas=document.createElement('canvas');
+  canvas.width=canvas.height=192;drawFishIcon(canvas,192);
+  const icon192=canvas.toDataURL('image/png');
+  canvas.width=canvas.height=256;drawFishIcon(canvas,256);
+  const icon256=canvas.toDataURL('image/png');
+
+  // apple-touch-icon
+  const appleLink=document.getElementById('pwa-apple-icon');
+  if(appleLink) appleLink.href=icon256;
+
+  // 2) Web App Manifest (blob)
+  const manifest={
+    name:'동해안 낚시 & 맛집',
+    short_name:'동해안 낚시',
+    description:'포항·영덕·울진 루어낚시 포인트 19곳, 맛집, 실시간 날씨·해양',
+    start_url:location.href,
+    display:'standalone',
+    orientation:'portrait',
+    background_color:'#0d47a1',
+    theme_color:'#0d47a1',
+    icons:[
+      {src:icon192,sizes:'192x192',type:'image/png',purpose:'any maskable'},
+      {src:icon256,sizes:'256x256',type:'image/png',purpose:'any maskable'},
+    ]
+  };
+  const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
+  const manifestURL=URL.createObjectURL(blob);
+  const mLink=document.getElementById('pwa-manifest');
+  if(mLink) mLink.href=manifestURL;
+
+  // 3) Service Worker (캐시 오프라인 지원) — HTTP/HTTPS 환경에서만
+  if('serviceWorker' in navigator && location.protocol!=='file:'){
+    const swCode=`
+const CACHE='fishing-v1';
+const PRE=[self.location.href.replace(/\\/sw\\.js/,''),'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(PRE).catch(()=>{})));self.skipWaiting();});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});
+self.addEventListener('fetch',e=>{if(!e.request.url.startsWith('http'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{if(res&&res.status===200){const c=res.clone();caches.open(CACHE).then(ca=>ca.put(e.request,c));}return res;}).catch(()=>caches.match(e.request))));});
+    `.trim();
+    const swBlob=new Blob([swCode],{type:'application/javascript'});
+    const swURL=URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swURL,{scope:'./'}).catch(()=>{});
+  }
+
+  // 4) FAB 표시 로직
+  const fab=document.getElementById('install-fab');
+  let deferredPrompt=null;
+
+  // Android Chrome — beforeinstallprompt
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault();
+    deferredPrompt=e;
+    if(fab){fab.style.display='flex';fab.onclick=()=>{deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;fab.style.display='none';});};
+    }
+  });
+
+  // iOS Safari — standalone 아닌 경우 수동 안내 FAB 표시
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone=window.navigator.standalone||window.matchMedia('(display-mode:standalone)').matches;
+  if(isIOS&&!isStandalone&&fab){
+    fab.style.display='flex';
+    fab.onclick=()=>{ igSwitch('ios'); document.getElementById('install-guide').classList.add('open'); };
+  }
+
+  // 이미 standalone이면 FAB 숨김
+  if(isStandalone&&fab) fab.style.display='none';
+})();
+
+function showInstall(){
+  // 기기 자동 감지
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  igSwitch(isIOS?'ios':'android');
+  document.getElementById('install-guide').classList.add('open');
+}
+function closeGuide(){
+  document.getElementById('install-guide').classList.remove('open');
+}
+function igSwitch(os){
+  document.getElementById('ig-android').style.display=os==='android'?'':'none';
+  document.getElementById('ig-ios').style.display=os==='ios'?'':'none';
+  document.getElementById('ig-android-tab').classList.toggle('active',os==='android');
+  document.getElementById('ig-ios-tab').classList.toggle('active',os==='ios');
+}
+// 모달 바깥 탭 시 닫기
+document.getElementById('install-guide').addEventListener('click',function(e){
+  if(e.target===this) closeGuide();
+});
+</script>
+</body>
+</html>
