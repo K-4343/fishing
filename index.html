@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d47a1">
 <meta name="description" content="포항·영덕·울진 루어낚시 포인트, 전국 해안 실시간 날씨·해양 정보">
-<link id="pwa-manifest" rel="manifest">
+<link rel="manifest" href="manifest.json">
 <link id="pwa-apple-icon" rel="apple-touch-icon">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -3083,26 +3083,6 @@ window.addEventListener('DOMContentLoaded',()=>{
   // apple-touch-icon
   const appleLink=document.getElementById('pwa-apple-icon');
   if(appleLink) appleLink.href=icon256;
-
-  // 2) Web App Manifest (blob)
-  const manifest={
-    name:'동해안 낚시 & 맛집',
-    short_name:'동해안 낚시',
-    description:'포항·영덕·울진 루어낚시 포인트 19곳, 맛집, 실시간 날씨·해양',
-    start_url:location.href,
-    display:'standalone',
-    orientation:'portrait',
-    background_color:'#0d47a1',
-    theme_color:'#0d47a1',
-    icons:[
-      {src:icon192,sizes:'192x192',type:'image/png',purpose:'any maskable'},
-      {src:icon256,sizes:'256x256',type:'image/png',purpose:'any maskable'},
-    ]
-  };
-  const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
-  const manifestURL=URL.createObjectURL(blob);
-  const mLink=document.getElementById('pwa-manifest');
-  if(mLink) mLink.href=manifestURL;
 
   // 3) Service Worker (캐시 오프라인 지원) — HTTP/HTTPS 환경에서만
   if('serviceWorker' in navigator && location.protocol!=='file:'){
