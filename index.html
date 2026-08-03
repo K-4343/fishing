@@ -557,6 +557,20 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
   background:#0d47a1;color:#fff;border:none;border-radius:24px;
   font-size:14px;font-weight:700;cursor:pointer;
 }
+/* ── 접속 코드 모달 ──────────────────────────── */
+#code-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;}
+.code-sheet{background:#fff;border-radius:18px;padding:28px 22px;width:88%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.18);}
+.code-sheet-title{font-size:17px;font-weight:800;color:#4a148c;margin-bottom:6px;text-align:center;}
+.code-sheet-sub{font-size:11px;color:#888;text-align:center;margin-bottom:18px;}
+.code-input-row{display:flex;gap:8px;margin-bottom:10px;}
+.code-input-row input{flex:1;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;outline:none;font-family:inherit;}
+.code-input-row input:focus{border-color:#4a148c;}
+.code-submit-btn{padding:10px 16px;background:#4a148c;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.code-cancel-btn{width:100%;padding:9px;background:#f5f5f5;color:#888;border:none;border-radius:10px;font-size:13px;cursor:pointer;margin-top:4px;}
+/* ── 접속코드 변경 섹션 ──────────────────────── */
+.code-change-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.code-change-btn{grid-column:1/-1;padding:9px;background:#4a148c;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;}
+.code-logout-btn{grid-column:1/-1;padding:8px;background:#f5f5f5;color:#888;border:1px solid #e0e0e0;border-radius:10px;font-size:12px;cursor:pointer;margin-top:4px;}
 </style>
 </head>
 <body>
@@ -616,6 +630,7 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
         <span>Windy 로딩 중...</span>
       </div>
       <iframe id="windy-iframe" allowfullscreen
+        sandbox="allow-scripts allow-same-origin allow-popups"
         onload="document.getElementById('windy-loading').classList.add('hidden')"
         src="https://embed.windy.com/embed2.html?lat=35.5&lon=127.5&zoom=6&level=surface&overlay=waves&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=m%2Fs&metricTemp=%C2%B0C&radarRange=-1">
       </iframe>
@@ -872,6 +887,17 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
     </div>
     <div class="cs-list" id="cs-list"></div>
   </div>
+
+  <!-- 접속 코드 설정 -->
+  <div class="tool-section">
+    <div class="tool-section-title">🔒 접속 코드 설정</div>
+    <div class="code-change-row">
+      <input class="csi" id="code-current" type="password" placeholder="현재 코드" autocomplete="off">
+      <input class="csi" id="code-new" type="password" placeholder="새 코드" autocomplete="off">
+      <button class="code-change-btn" onclick="changeAccessCode()">🔑 코드 변경</button>
+      <button class="code-logout-btn" onclick="logoutAccess()">🚪 이 기기에서 로그아웃</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══ 포인트 메모 모달 ══ -->
@@ -885,6 +911,19 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
       <button class="note-del-btn" onclick="deleteNote()">🗑 삭제</button>
       <button class="note-close-btn" onclick="closeNote()">닫기</button>
     </div>
+  </div>
+</div>
+
+<!-- 접속 코드 모달 -->
+<div id="code-modal">
+  <div class="code-sheet">
+    <div class="code-sheet-title">🔒 접속 코드 입력</div>
+    <div class="code-sheet-sub">소수 지인만 사용하는 공간입니다.<br>접속 코드를 입력해주세요.</div>
+    <div class="code-input-row">
+      <input id="code-input" type="password" placeholder="접속 코드" autocomplete="off">
+      <button class="code-submit-btn" onclick="submitAccessCode()">확인</button>
+    </div>
+    <button class="code-cancel-btn" onclick="closeCodeModal()">취소</button>
   </div>
 </div>
 
@@ -1567,6 +1606,15 @@ function windLevel(w){
   return         {color:'#b71c1c',label:`${w.toFixed(1)} m/s — 출조금지`};
 }
 
+// 수온 색상 (동해 루어낚시 기준: 15~25°C 적합)
+function sstColor(v){
+  if(v==null||isNaN(v)) return '#888';
+  if(v<10||v>28) return '#c62828'; // 극단 — 빨강
+  if(v<15||v>25) return '#e65100'; // 낮음/높음 — 주황
+  if(v>=18&&v<=24) return '#2e7d32'; // 최적 — 진녹색
+  return '#558b2f'; // 양호 — 녹색
+}
+
 // 5단계 출조 적합성 판단 (실시간 API 데이터 기반)
 // safetyAll(풍속m/s, 파고m, WMO코드, 강수량mm/h, 수온°C|null, 기압6h강하hPa)
 function safetyAll(wind,waveH,rainCode,precip,sst,pressureDrop6h){
@@ -1602,9 +1650,12 @@ function safetyAll(wind,waveH,rainCode,precip,sst,pressureDrop6h){
   // ── 4단계: 수온 활동도 ───────────────────
   let sstScore=0, sstLabel='';
   if(sst!=null){
-    if(sst<10||sst>28){ sstScore=-30; sstLabel='수온 극단(어류 비활성)'; }
-    else if(sst<15||sst>25){ sstScore=-10; sstLabel='수온 보통'; }
-    else{ sstScore=10; sstLabel='수온 최적('+sst.toFixed(1)+'°C)'; }
+    const sv=sst.toFixed(1)+'°C';
+    if(sst<10||sst>28){ sstScore=-30; sstLabel='수온 '+sv+' — 어류 비활성 구간'; }
+    else if(sst<15)    { sstScore=-15; sstLabel='수온 '+sv+' — 저수온 (활성 저하)'; }
+    else if(sst>25)    { sstScore=-10; sstLabel='수온 '+sv+' — 고수온 주의'; }
+    else if(sst>=18&&sst<=24){ sstScore=10; sstLabel='수온 '+sv+' — 루어 최적 구간'; }
+    else               { sstScore=2;  sstLabel='수온 '+sv; }
   }
 
   // ── 5단계: 기압 추이 ─────────────────────
@@ -2030,7 +2081,7 @@ function renderMarineDetail(){
       +'<div class="md-row">🌊<span class="md-lbl">파고</span><b style="color:'+wlv.color+'">'+wh+'m</b></div>'
       +'<div class="md-row">〜<span class="md-lbl">너울</span><b>'+swh+'m</b></div>'
       +'<div class="md-row">⏱<span class="md-lbl">파주기</span><b>'+wp+(wp!=='-'?'초':'')+'</b></div>'
-      +'<div class="md-row">🌡<span class="md-lbl">수온</span><b>'+sst+(sst!=='-'?'°C':'')+'</b></div>'
+      +'<div class="md-row">🌡<span class="md-lbl">수온</span><b style="color:'+sstColor(sst_raw??null)+'">'+sst+(sst!=='-'?'°C':'')+'</b></div>'
       +'</div>'
       +'<div style="display:flex;gap:6px;margin-top:5px;font-size:10px;flex-wrap:wrap">'
       +'<span style="background:'+sfClr+'12;color:'+sfClr+';border-radius:6px;padding:2px 8px;font-weight:700">'+sf.detail+'</span>'
@@ -2132,7 +2183,7 @@ function buildWxPopup(d){
           +'<td style="padding-left:8px;color:#555">⏱ 파주기</td><td><b>'+wp+(wp!=='-'?'초':'')+'</b></td></tr>'
           +(waveHNum>=1.5?'<tr><td colspan="4" style="background:#fce4ec;color:#c62828;font-weight:700;font-size:10px;padding:4px 6px;border-radius:4px">⚠️ 파고 높음 — 갯바위·방파제 끝단 출조 위험</td></tr>':'')+
           '<tr><td style="color:#555">〜 너울</td><td><b>'+swh+'m</b></td>'
-          +'<td style="padding-left:8px;color:#555">🌡 수온</td><td><b>'+sst+(sst!=='-'?'°C':'')+'</b></td></tr>';
+          +'<td style="padding-left:8px;color:#555">🌡 수온</td><td><b style="color:'+sstColor(sst_num)+'">'+sst+(sst!=='-'?'°C':'')+'</b></td></tr>';
         })()
         :'<tr><td colspan="4" style="color:#888;font-size:10px;padding:4px 0">'
         +'🌊 바다를 클릭하면 파고·파주기·수온·너울 표시</td></tr>')
@@ -2496,7 +2547,7 @@ function renderAlertMarkers(items){
     const isGb=info.level==='경보';
     const color=isGb?'#b71c1c':'#e65100';
     L.circleMarker([c.lat,c.lng],{radius:isGb?28:22,fillColor:color,color:'#fff',weight:2.5,fillOpacity:0.88})
-      .bindPopup(`<b style="color:${color}">⚠️ ${sea} 풍랑${info.level}</b><br><small>${info.areas.join('<br>')}</small>`)
+      .bindPopup(`<b style="color:${color}">⚠️ ${escHtml(sea)} 풍랑${escHtml(info.level)}</b><br><small>${info.areas.map(a=>escHtml(a)).join('<br>')}</small>`)
       .addTo(alertLayer);
     L.marker([c.lat+0.35,c.lng],{icon:L.divIcon({
       html:`<div style="background:${color};color:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3)">풍랑${info.level}</div>`,
@@ -2796,41 +2847,41 @@ function showToast(msg){
   clearTimeout(t._tid);t._tid=setTimeout(()=>{t.style.opacity='0';},2200);
 }
 
-// ══ 출조 일지 ════════════════════════════════════
-function addLog(){
+// ══ 출조 일지 (Firestore 공유) ═══════════════════
+async function addLog(){
+  if(!await checkAccess()) return;
   const date=document.getElementById('log-date').value;
   const spot=document.getElementById('log-spot').value.trim();
   const fish=document.getElementById('log-fish').value.trim();
   const weather=document.getElementById('log-weather').value.trim();
   const memo=document.getElementById('log-memo').value.trim();
   if(!date||!spot){showToast('날짜와 포인트명은 필수입니다');return;}
-  const logs=JSON.parse(localStorage.getItem('fishing_logs')||'[]');
-  logs.unshift({date,spot,fish,weather,memo,ts:Date.now()});
-  localStorage.setItem('fishing_logs',JSON.stringify(logs));
-  document.getElementById('log-date').value='';
-  document.getElementById('log-spot').value='';
-  document.getElementById('log-fish').value='';
-  document.getElementById('log-weather').value='';
-  document.getElementById('log-memo').value='';
-  renderLogs();
-  showToast('📓 일지가 저장됐습니다');
+  if(!window._fbAddLog){showToast('서버 연결 중입니다. 잠시 후 다시 시도하세요');return;}
+  try{
+    await window._fbAddLog({date,spot,fish,weather,memo,ts:Date.now()});
+    document.getElementById('log-date').value=new Date().toISOString().slice(0,10);
+    ['log-spot','log-fish','log-weather','log-memo'].forEach(id=>{document.getElementById(id).value='';});
+    showToast('📓 일지가 저장됐습니다');
+  }catch(e){showToast('저장 실패: 잠시 후 다시 시도하세요');}
 }
-function deleteLog(ts){
-  const logs=JSON.parse(localStorage.getItem('fishing_logs')||'[]').filter(l=>l.ts!==ts);
-  localStorage.setItem('fishing_logs',JSON.stringify(logs));
-  renderLogs();
+async function deleteLog(id){
+  if(!await checkAccess()) return;
+  if(!window._fbDelLog) return;
+  try{await window._fbDelLog(id);showToast('🗑 일지가 삭제됐습니다');}
+  catch(e){showToast('삭제 실패');}
 }
 function renderLogs(){
   const wrap=document.getElementById('log-list');
   if(!wrap) return;
-  const logs=JSON.parse(localStorage.getItem('fishing_logs')||'[]');
+  const logs=window._sharedLogs;
+  if(!logs){wrap.innerHTML='<div class="log-empty">⏳ 서버 연결 중...</div>';return;}
   if(!logs.length){wrap.innerHTML='<div class="log-empty">📓 아직 출조 일지가 없습니다.<br>첫 번째 출조를 기록해보세요!</div>';return;}
   wrap.innerHTML=logs.map(l=>`
     <div class="log-item">
       <div class="log-item-header">
-        <span class="log-item-date">${l.date}</span>
-        <span class="log-item-weather">${l.weather||''}</span>
-        <button class="log-item-del" onclick="deleteLog(${l.ts})">🗑 삭제</button>
+        <span class="log-item-date">${escHtml(l.date)}</span>
+        <span class="log-item-weather">${escHtml(l.weather||'')}</span>
+        <button class="log-item-del" onclick="deleteLog('${escHtml(l.id)}')">🗑 삭제</button>
       </div>
       <div class="log-item-spot">📍 ${escHtml(l.spot)}</div>
       ${l.fish?`<div class="log-item-fish">🐟 ${escHtml(l.fish)}</div>`:''}
@@ -2903,26 +2954,29 @@ function calcCarbon(){
   r.innerHTML=`카본 ${v}호 ≈ <b>${kg}kg (${lb}lb)</b> 인장강도<br><span style="font-size:11px;font-weight:400;color:#555">※ 제조사별 ±15% 오차 있음</span>`;
 }
 
-// ══ 내 포인트 추가 ════════════════════════════════
-let customSpots=JSON.parse(localStorage.getItem('custom_spots')||'[]');
-function addCustomSpot(){
+// ══ 공유 포인트 (Firestore) ════════════════════════
+async function addCustomSpot(){
+  if(!await checkAccess()) return;
   const name=document.getElementById('cs-name').value.trim();
   const lat=parseFloat(document.getElementById('cs-lat').value);
   const lng=parseFloat(document.getElementById('cs-lng').value);
   const fish=document.getElementById('cs-fish').value.trim();
   const memo=document.getElementById('cs-memo').value.trim();
   if(!name){showToast('포인트명을 입력하세요');return;}
-  if(!lat||!lng){showToast('위도·경도를 입력하세요');return;}
-  customSpots.push({id:'c'+Date.now(),name,lat,lng,fish,memo});
-  localStorage.setItem('custom_spots',JSON.stringify(customSpots));
-  ['cs-name','cs-lat','cs-lng','cs-fish','cs-memo'].forEach(id=>{document.getElementById(id).value='';});
-  renderCustomSpots();
-  showToast('📍 포인트가 추가됐습니다');
+  if(isNaN(lat)||isNaN(lng)){showToast('위도·경도를 입력하세요');return;}
+  if(lat<34||lat>39||lng<128||lng>131){showToast('동해안 좌표 범위를 벗어났습니다');return;}
+  if(!window._fbAddSpot){showToast('서버 연결 중입니다. 잠시 후 다시 시도하세요');return;}
+  try{
+    await window._fbAddSpot({name,lat,lng,fish,memo,ts:Date.now()});
+    ['cs-name','cs-lat','cs-lng','cs-fish','cs-memo'].forEach(id=>{document.getElementById(id).value='';});
+    showToast('📍 포인트가 공유됐습니다');
+  }catch(e){showToast('저장 실패: 잠시 후 다시 시도하세요');}
 }
-function deleteCustomSpot(id){
-  customSpots=customSpots.filter(s=>s.id!==id);
-  localStorage.setItem('custom_spots',JSON.stringify(customSpots));
-  renderCustomSpots();
+async function deleteCustomSpot(id){
+  if(!await checkAccess()) return;
+  if(!window._fbDelSpot) return;
+  try{await window._fbDelSpot(id);showToast('🗑 포인트가 삭제됐습니다');}
+  catch(e){showToast('삭제 실패');}
 }
 function goCustomSpot(lat,lng){
   switchTab('map');
@@ -2931,20 +2985,83 @@ function goCustomSpot(lat,lng){
 function renderCustomSpots(){
   const wrap=document.getElementById('cs-list');
   if(!wrap) return;
-  customSpots=JSON.parse(localStorage.getItem('custom_spots')||'[]');
-  if(!customSpots.length){wrap.innerHTML='<div style="font-size:12px;color:#aaa;text-align:center;padding:16px">추가된 포인트가 없습니다</div>';return;}
-  wrap.innerHTML=customSpots.map(s=>`
+  const spots=window._sharedSpots;
+  if(!spots){wrap.innerHTML='<div style="font-size:12px;color:#888;text-align:center;padding:16px">⏳ 서버 연결 중...</div>';return;}
+  if(!spots.length){wrap.innerHTML='<div style="font-size:12px;color:#aaa;text-align:center;padding:16px">추가된 포인트가 없습니다</div>';return;}
+  wrap.innerHTML=spots.map(s=>`
     <div class="cs-item">
       <div class="cs-item-info">
         <div class="cs-item-name">📍 ${escHtml(s.name)}</div>
         <div class="cs-item-fish">${s.fish?'🐟 '+escHtml(s.fish):''} ${s.memo?'· '+escHtml(s.memo):''}</div>
       </div>
       <div class="cs-item-btns">
-        <button class="cs-go-btn" onclick="goCustomSpot(${s.lat},${s.lng})">지도</button>
-        <button class="cs-del-btn" onclick="deleteCustomSpot('${s.id}')">삭제</button>
+        <button class="cs-go-btn" onclick="goCustomSpot(${Number(s.lat)},${Number(s.lng)})">지도</button>
+        <button class="cs-del-btn" onclick="deleteCustomSpot('${escHtml(s.id)}')">삭제</button>
       </div>
     </div>`).join('');
 }
+
+// ══ 접속 코드 시스템 ══════════════════════════════
+async function checkAccess(){
+  if(localStorage.getItem('fishing_access_ok')==='1') return true;
+  showCodeModal();
+  return false;
+}
+function showCodeModal(){
+  document.getElementById('code-modal').style.display='flex';
+  setTimeout(()=>{const el=document.getElementById('code-input');if(el)el.focus();},100);
+}
+function closeCodeModal(){
+  document.getElementById('code-modal').style.display='none';
+}
+async function submitAccessCode(){
+  const input=document.getElementById('code-input').value.trim();
+  if(!input){showToast('코드를 입력하세요');return;}
+  if(!window._fbGetCode){showToast('서버 연결 중입니다. 잠시 후 다시 시도하세요');return;}
+  try{
+    const stored=await window._fbGetCode();
+    if(stored===null){
+      // 처음 설정: 입력한 코드가 마스터 코드가 됨
+      if(confirm('등록된 접속 코드가 없습니다.\n입력한 코드를 접속 코드로 설정하시겠습니까?')){
+        await window._fbSetCode(input);
+        localStorage.setItem('fishing_access_ok','1');
+        closeCodeModal();
+        showToast('✅ 접속 코드가 설정됐습니다');
+      }
+    }else if(input===stored){
+      localStorage.setItem('fishing_access_ok','1');
+      closeCodeModal();
+      showToast('✅ 인증됐습니다');
+    }else{
+      showToast('❌ 코드가 올바르지 않습니다');
+      document.getElementById('code-input').value='';
+      document.getElementById('code-input').focus();
+    }
+  }catch(e){showToast('오류가 발생했습니다. 잠시 후 다시 시도하세요');}
+}
+async function changeAccessCode(){
+  const current=document.getElementById('code-current').value.trim();
+  const newCode=document.getElementById('code-new').value.trim();
+  if(!current||!newCode){showToast('현재 코드와 새 코드를 모두 입력하세요');return;}
+  if(newCode.length<4){showToast('새 코드는 4자 이상으로 설정하세요');return;}
+  if(!window._fbGetCode){showToast('서버 연결 중입니다');return;}
+  try{
+    const stored=await window._fbGetCode();
+    if(current!==stored){showToast('❌ 현재 코드가 올바르지 않습니다');return;}
+    await window._fbSetCode(newCode);
+    localStorage.removeItem('fishing_access_ok');
+    ['code-current','code-new'].forEach(id=>{document.getElementById(id).value='';});
+    showToast('✅ 코드가 변경됐습니다. 다시 인증해주세요');
+  }catch(e){showToast('변경 실패: 잠시 후 다시 시도하세요');}
+}
+function logoutAccess(){
+  localStorage.removeItem('fishing_access_ok');
+  showToast('🚪 이 기기에서 로그아웃됐습니다');
+}
+// 접속 코드 입력창에서 Enter 키 지원
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('code-modal')?.style.display==='flex') submitAccessCode();
+});
 
 // ══ 날씨 오프라인 캐싱 ════════════════════════════
 const WX_CACHE_KEY='wx_last_cache';
@@ -3141,6 +3258,65 @@ function igSwitch(os){
 document.getElementById('install-guide').addEventListener('click',function(e){
   if(e.target===this) closeGuide();
 });
+</script>
+
+<!-- ══ Firebase SDK ══════════════════════════════ -->
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js';
+import{getAuth,signInAnonymously,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js';
+import{getFirestore,collection,addDoc,deleteDoc,doc,onSnapshot,query,orderBy,getDoc,setDoc}from'https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js';
+
+const firebaseConfig={
+  apiKey:'AIzaSyD7N4RNCzjUhtsO8rUx08AWO6p3JbchUKU',
+  authDomain:'fishing-app-506ce.firebaseapp.com',
+  projectId:'fishing-app-506ce',
+  storageBucket:'fishing-app-506ce.firebasestorage.app',
+  messagingSenderId:'364060111373',
+  appId:'1:364060111373:web:8909dcb18b17d85165db44'
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+// 익명 로그인 (앱 시작 시 자동)
+signInAnonymously(auth).catch(e=>console.warn('Auth:',e.code));
+
+// 인증 완료 후 Firestore 실시간 구독 시작
+onAuthStateChanged(auth,user=>{
+  if(!user) return;
+  window._fbUid=user.uid;
+
+  // 공유 포인트 실시간 구독
+  const spotsQ=query(collection(db,'spots'),orderBy('ts','desc'));
+  onSnapshot(spotsQ,snap=>{
+    window._sharedSpots=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(typeof renderCustomSpots==='function') renderCustomSpots();
+  },e=>console.warn('spots:',e));
+
+  // 출조 일지 실시간 구독
+  const logsQ=query(collection(db,'logs'),orderBy('ts','desc'));
+  onSnapshot(logsQ,snap=>{
+    window._sharedLogs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(typeof renderLogs==='function') renderLogs();
+  },e=>console.warn('logs:',e));
+});
+
+// 포인트 추가
+window._fbAddSpot=async data=>addDoc(collection(db,'spots'),data);
+// 포인트 삭제
+window._fbDelSpot=async id=>deleteDoc(doc(db,'spots',id));
+// 일지 추가
+window._fbAddLog=async data=>addDoc(collection(db,'logs'),data);
+// 일지 삭제
+window._fbDelLog=async id=>deleteDoc(doc(db,'logs',id));
+// 접속 코드 조회
+window._fbGetCode=async()=>{
+  const snap=await getDoc(doc(db,'config','settings'));
+  return snap.exists()?snap.data().accessCode:null;
+};
+// 접속 코드 저장
+window._fbSetCode=async code=>setDoc(doc(db,'config','settings'),{accessCode:code},{merge:true});
 </script>
 </body>
 </html>
