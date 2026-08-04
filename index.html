@@ -3386,7 +3386,7 @@ function renderBestFishingHours(){
 
 // ══ 접속 코드 시스템 ══════════════════════════════
 let _codeAttempts=0,_codeLockUntil=0;
-async function checkAccess(){
+function checkAccess(){
   if(localStorage.getItem('fishing_access_ok')==='1') return true;
   showCodeModal();
   return false;
@@ -3398,7 +3398,7 @@ function showCodeModal(){
 function closeCodeModal(){
   document.getElementById('code-modal').style.display='none';
 }
-async function submitAccessCode(){
+function submitAccessCode(){
   if(Date.now()<_codeLockUntil){
     const sec=Math.ceil((_codeLockUntil-Date.now())/1000);
     showToast('⏳ '+sec+'초 후에 다시 시도하세요');
@@ -3406,35 +3406,23 @@ async function submitAccessCode(){
   }
   const input=document.getElementById('code-input').value.trim();
   if(!input){showToast('코드를 입력하세요');return;}
-  if(!window._fbGetCode){showToast('서버 연결 중입니다. 잠시 후 다시 시도하세요');return;}
-  try{
-    const stored=await window._fbGetCode();
-    if(stored===null){
-      // 처음 설정: 입력한 코드가 마스터 코드가 됨
-      if(confirm('등록된 접속 코드가 없습니다.\n입력한 코드를 접속 코드로 설정하시겠습니까?')){
-        await window._fbSetCode(input);
-        localStorage.setItem('fishing_access_ok','1');
-        closeCodeModal();
-        showToast('✅ 접속 코드가 설정됐습니다');
-      }
-    }else if(input===stored){
+  if(input==='8899'){
+    _codeAttempts=0;
+    localStorage.setItem('fishing_access_ok','1');
+    closeCodeModal();
+    showToast('✅ 인증됐습니다');
+  }else{
+    _codeAttempts++;
+    if(_codeAttempts>=5){
+      _codeLockUntil=Date.now()+30000;
       _codeAttempts=0;
-      localStorage.setItem('fishing_access_ok','1');
-      closeCodeModal();
-      showToast('✅ 인증됐습니다');
+      showToast('⚠️ 5회 실패 — 30초 후 재시도 가능');
     }else{
-      _codeAttempts++;
-      if(_codeAttempts>=5){
-        _codeLockUntil=Date.now()+30000;
-        _codeAttempts=0;
-        showToast('⚠️ 5회 실패 — 30초 후 재시도 가능');
-      }else{
-        showToast('❌ 코드가 올바르지 않습니다 ('+_codeAttempts+'/5)');
-      }
-      document.getElementById('code-input').value='';
-      document.getElementById('code-input').focus();
+      showToast('❌ 코드가 올바르지 않습니다 ('+_codeAttempts+'/5)');
     }
-  }catch(e){showToast('오류가 발생했습니다. 잠시 후 다시 시도하세요');}
+    document.getElementById('code-input').value='';
+    document.getElementById('code-input').focus();
+  }
 }
 async function changeAccessCode(){
   const current=document.getElementById('code-current').value.trim();
@@ -3455,6 +3443,9 @@ function logoutAccess(){
   localStorage.removeItem('fishing_access_ok');
   showToast('🚪 이 기기에서 로그아웃됐습니다');
 }
+// 페이지 로드 시 접속 코드 확인
+if(localStorage.getItem('fishing_access_ok')!=='1') showCodeModal();
+
 // 접속 코드 입력창에서 Enter 키 지원
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&document.getElementById('code-modal')?.style.display==='flex') submitAccessCode();
