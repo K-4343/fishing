@@ -12,7 +12,7 @@
 <meta name="theme-color" content="#0d47a1">
 <meta name="description" content="포항·영덕·울진 루어낚시 포인트, 전국 해안 실시간 날씨·해양 정보">
 <link rel="manifest" href="manifest.json">
-<link id="pwa-apple-icon" rel="apple-touch-icon">
+<link rel="apple-touch-icon" href="icons/icon-512.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 :root{
@@ -3387,7 +3387,7 @@ function renderBestFishingHours(){
 // ══ 접속 코드 시스템 ══════════════════════════════
 let _codeAttempts=0,_codeLockUntil=0;
 function checkAccess(){
-  if(localStorage.getItem('fishing_access_ok')==='1') return true;
+  if(sessionStorage.getItem('fishing_access_ok')==='1') return true;
   showCodeModal();
   return false;
 }
@@ -3408,7 +3408,7 @@ function submitAccessCode(){
   if(!input){showToast('코드를 입력하세요');return;}
   if(input==='8899'){
     _codeAttempts=0;
-    localStorage.setItem('fishing_access_ok','1');
+    sessionStorage.setItem('fishing_access_ok','1');
     closeCodeModal();
     showToast('✅ 인증됐습니다');
   }else{
@@ -3434,17 +3434,17 @@ async function changeAccessCode(){
     const stored=await window._fbGetCode();
     if(current!==stored){showToast('❌ 현재 코드가 올바르지 않습니다');return;}
     await window._fbSetCode(newCode);
-    localStorage.removeItem('fishing_access_ok');
+    sessionStorage.removeItem('fishing_access_ok');
     ['code-current','code-new'].forEach(id=>{document.getElementById(id).value='';});
     showToast('✅ 코드가 변경됐습니다. 다시 인증해주세요');
   }catch(e){showToast('변경 실패: 잠시 후 다시 시도하세요');}
 }
 function logoutAccess(){
-  localStorage.removeItem('fishing_access_ok');
+  sessionStorage.removeItem('fishing_access_ok');
   showToast('🚪 이 기기에서 로그아웃됐습니다');
 }
 // 페이지 로드 시 접속 코드 확인
-if(localStorage.getItem('fishing_access_ok')!=='1') showCodeModal();
+if(sessionStorage.getItem('fishing_access_ok')!=='1') showCodeModal();
 
 // 접속 코드 입력창에서 Enter 키 지원
 document.addEventListener('keydown',e=>{
@@ -3498,107 +3498,6 @@ window.addEventListener('DOMContentLoaded',()=>{
 
 // ══ PWA / 홈 화면 추가 ═════════════════════════════════════════
 (function initPWA(){
-  // 1) Canvas로 앱 아이콘 생성 — 루어낚시 커스텀 그래픽
-  function drawFishIcon(canvas,S){
-    const ctx=canvas.getContext('2d'),r=S/192;
-    // 배경: 딥네이비 → 오션블루 그라디언트
-    const bg=ctx.createLinearGradient(0,0,S*0.35,S);
-    bg.addColorStop(0,'#0a2d73');bg.addColorStop(1,'#0277bd');
-    ctx.fillStyle=bg;ctx.beginPath();ctx.roundRect(0,0,S,S,38*r);ctx.fill();
-    // 상단 유리질 하이라이트
-    const hl=ctx.createRadialGradient(S*0.3,S*0.22,0,S*0.3,S*0.22,S*0.65);
-    hl.addColorStop(0,'rgba(255,255,255,0.13)');hl.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=hl;ctx.beginPath();ctx.roundRect(0,0,S,S,38*r);ctx.fill();
-    // 파도 1 (진한 청색)
-    ctx.fillStyle='rgba(1,87,155,0.68)';
-    ctx.beginPath();ctx.moveTo(0,S*0.72);
-    ctx.bezierCurveTo(S*0.22,S*0.60,S*0.44,S*0.80,S*0.66,S*0.68);
-    ctx.bezierCurveTo(S*0.80,S*0.60,S*0.92,S*0.68,S,S*0.65);
-    ctx.lineTo(S,S);ctx.lineTo(0,S);ctx.fill();
-    // 파도 2 (흰색 거품)
-    ctx.fillStyle='rgba(255,255,255,0.10)';
-    ctx.beginPath();ctx.moveTo(0,S*0.84);
-    ctx.bezierCurveTo(S*0.18,S*0.76,S*0.38,S*0.89,S*0.58,S*0.81);
-    ctx.bezierCurveTo(S*0.72,S*0.75,S*0.88,S*0.84,S,S*0.81);
-    ctx.lineTo(S,S);ctx.lineTo(0,S);ctx.fill();
-    // ── 물고기 ──────────────────────────────────
-    const bx=S*0.50,by=S*0.43,bw=S*0.30,bh=S*0.17;
-    // 몸통
-    ctx.fillStyle='#ffffff';
-    ctx.shadowColor='rgba(0,30,80,0.40)';ctx.shadowBlur=9*r;
-    ctx.beginPath();
-    ctx.moveTo(bx-bw,by);
-    ctx.bezierCurveTo(bx-bw*0.6,by-bh*1.2,bx+bw*0.15,by-bh*1.35,bx+bw*0.55,by-bh*0.70);
-    ctx.lineTo(bx+bw,by-bh*1.52);     // 꼬리 위 끝
-    ctx.lineTo(bx+bw*0.72,by);         // 꼬리 중앙 홈
-    ctx.lineTo(bx+bw,by+bh*1.52);     // 꼬리 아래 끝
-    ctx.lineTo(bx+bw*0.55,by+bh*0.70);
-    ctx.bezierCurveTo(bx+bw*0.15,by+bh*1.35,bx-bw*0.6,by+bh*1.2,bx-bw,by);
-    ctx.closePath();ctx.fill();ctx.shadowBlur=0;
-    // 등지느러미
-    ctx.fillStyle='rgba(255,255,255,0.72)';
-    ctx.beginPath();
-    ctx.moveTo(bx-bw*0.05,by-bh*1.28);
-    ctx.quadraticCurveTo(bx+bw*0.08,by-bh*2.30,bx+bw*0.22,by-bh*1.70);
-    ctx.quadraticCurveTo(bx+bw*0.33,by-bh*1.42,bx+bw*0.43,by-bh*1.28);
-    ctx.fill();
-    // 가슴지느러미
-    ctx.fillStyle='rgba(255,255,255,0.52)';
-    ctx.beginPath();
-    ctx.moveTo(bx-bw*0.08,by+bh*0.20);
-    ctx.quadraticCurveTo(bx-bw*0.04,by+bh*1.10,bx+bw*0.15,by+bh*0.86);
-    ctx.quadraticCurveTo(bx+bw*0.12,by+bh*0.30,bx+bw*0.04,by+bh*0.20);
-    ctx.fill();
-    // 비늘 곡선 3줄
-    ctx.strokeStyle='rgba(13,71,161,0.26)';ctx.lineWidth=1.8*r;
-    [bw*0.64,bw*0.34,bw*0.05].forEach(dx=>{
-      ctx.beginPath();ctx.arc(bx-dx,by,bh*0.86,Math.PI*0.35,Math.PI*0.75);ctx.stroke();
-    });
-    // 눈 (짙은 파랑)
-    ctx.fillStyle='#0a2472';
-    ctx.beginPath();ctx.arc(bx-bw*0.60,by-bh*0.15,7*r,0,Math.PI*2);ctx.fill();
-    // 눈 반짝임
-    ctx.fillStyle='rgba(255,255,255,0.90)';
-    ctx.beginPath();ctx.arc(bx-bw*0.63,by-bh*0.29,2.5*r,0,Math.PI*2);ctx.fill();
-    // ── 루어 (금색 물방울) ────────────────────
-    const lx=bx-bw-15*r,ly=by;
-    ctx.fillStyle='#FFD740';
-    ctx.shadowColor='rgba(255,200,0,0.55)';ctx.shadowBlur=7*r;
-    ctx.beginPath();ctx.ellipse(lx,ly,7*r,11*r,0,0,Math.PI*2);ctx.fill();
-    ctx.shadowBlur=0;
-    // 루어 반짝임
-    ctx.fillStyle='rgba(255,255,255,0.58)';
-    ctx.beginPath();ctx.ellipse(lx-2*r,ly-3*r,2.5*r,4.5*r,0,0,Math.PI*2);ctx.fill();
-    // 훅 (낚싯바늘 곡선)
-    ctx.strokeStyle='#FFD740';ctx.lineWidth=2.6*r;ctx.lineCap='round';
-    ctx.beginPath();ctx.arc(lx-9*r,ly+14*r,9*r,-Math.PI*0.05,Math.PI*0.85);ctx.stroke();
-    // ── 낚싯줄 (점선) ────────────────────────
-    ctx.strokeStyle='rgba(255,255,255,0.40)';ctx.lineWidth=1.8*r;
-    ctx.setLineDash([5*r,3.5*r]);
-    ctx.beginPath();ctx.moveTo(S*0.84,S*0.06);
-    ctx.quadraticCurveTo(S*0.15,S*0.28,lx,ly);ctx.stroke();
-    ctx.setLineDash([]);
-    // 낚싯대 끝 (금빛 점)
-    ctx.fillStyle='#FFD740';
-    ctx.shadowColor='rgba(255,210,0,0.7)';ctx.shadowBlur=6*r;
-    ctx.beginPath();ctx.arc(S*0.84,S*0.06,4*r,0,Math.PI*2);ctx.fill();
-    ctx.shadowBlur=0;
-    // 물거품 3개
-    [[S*0.76,S*0.58,4*r],[S*0.83,S*0.50,2.5*r],[S*0.71,S*0.53,3*r]].forEach(([x,y,br])=>{
-      ctx.strokeStyle='rgba(255,255,255,0.32)';ctx.lineWidth=1.5*r;
-      ctx.beginPath();ctx.arc(x,y,br,0,Math.PI*2);ctx.stroke();
-    });
-  }
-
-  const canvas=document.createElement('canvas');
-  canvas.width=canvas.height=192;drawFishIcon(canvas,192);
-  const icon192=canvas.toDataURL('image/png');
-  canvas.width=canvas.height=256;drawFishIcon(canvas,256);
-  const icon256=canvas.toDataURL('image/png');
-
-  // apple-touch-icon
-  const appleLink=document.getElementById('pwa-apple-icon');
-  if(appleLink) appleLink.href=icon256;
 
   // 3) Service Worker — sw.js 파일 등록 (HTTP/HTTPS 환경에서만)
   if('serviceWorker' in navigator && location.protocol!=='file:'){
