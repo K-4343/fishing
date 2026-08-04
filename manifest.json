@@ -1,19 +1,32 @@
 {
-  "name": "동해안 낚시 & 맛집",
-  "short_name": "동해안 낚시",
-  "description": "포항·영덕·울진 루어낚시 포인트, 실시간 날씨·해양 정보",
+  "name": "한국 해안 루어낚시",
+  "short_name": "낚시가이드",
+  "description": "전국 해안 루어낚시 포인트, 실시간 날씨·해양 정보",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0d47a1",
   "theme_color": "#0d47a1",
+  "lang": "ko",
   "icons": [
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

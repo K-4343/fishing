@@ -7,7 +7,7 @@
 <!-- PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="동해안 낚시">
+<meta name="apple-mobile-web-app-title" content="한국해안낚시">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d47a1">
 <meta name="description" content="포항·영덕·울진 루어낚시 포인트, 전국 해안 실시간 날씨·해양 정보">
@@ -23,11 +23,6 @@
 body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,sans-serif;
      background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;}
 
-.hero{background:linear-gradient(135deg,#0d47a1,#0277bd);color:#fff;padding:18px 16px 14px;text-align:center;}
-.hero h1{font-size:18px;font-weight:700;}
-.hero p{font-size:11px;margin-top:3px;opacity:.85;}
-.meta-row{display:flex;justify-content:center;gap:8px;margin-top:10px;flex-wrap:wrap;}
-.meta-chip{background:rgba(255,255,255,.18);border-radius:20px;padding:3px 10px;font-size:11px;}
 
 .tab-bar{display:flex;background:#fff;border-bottom:2px solid var(--border);
          position:sticky;top:0;z-index:900;box-shadow:0 1px 3px rgba(0,0,0,.07);}
@@ -37,7 +32,7 @@ body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,sans-serif;
 
 #map-view,#fish-view{display:none;}
 #map-view{display:block;}
-#map{width:100%;height:calc(100vh - 126px);min-height:380px;}
+#map{width:100%;height:calc(100vh - 134px);min-height:340px;}
 
 /* 지도 필터 */
 .map-controls{display:flex;gap:6px;padding:7px 12px;background:#fff;
@@ -63,6 +58,24 @@ body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,sans-serif;
 .fbtn.marinebtn{border-color:#00695c;color:#00695c;}
 .fbtn.marinebtn.on{background:#00695c;color:#fff;}
 .ctrl-sep{color:#ccc;margin:0 3px;font-size:16px;line-height:1;}
+
+/* ── 지도 검색 바 ──────────────────────────────── */
+.map-search-bar{display:flex;align-items:center;gap:6px;padding:6px 10px;background:#f5f7ff;border-bottom:1px solid var(--border);position:relative;}
+.map-search-input{flex:1;padding:7px 12px;border:1.5px solid #c5cae9;border-radius:20px;font-size:13px;font-family:inherit;outline:none;background:#fff;min-width:0;}
+.map-search-input:focus{border-color:#0d47a1;box-shadow:0 0 0 2px rgba(13,71,161,.1);}
+.map-search-input::placeholder{color:#aaa;}
+.map-search-btn{padding:7px 14px;background:#0d47a1;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.map-search-btn:active{background:#1565c0;}
+.map-search-clear{background:none;border:none;font-size:15px;color:#bbb;cursor:pointer;padding:4px 2px;line-height:1;flex-shrink:0;}
+.map-search-results{position:absolute;top:calc(100% + 2px);left:10px;right:10px;background:#fff;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:2000;overflow:hidden;display:none;max-height:320px;overflow-y:auto;}
+.map-search-results.open{display:block;}
+.map-sritem{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;cursor:pointer;border-bottom:1px solid #f5f5f5;transition:background .12s;}
+.map-sritem:last-child{border-bottom:none;}
+.map-sritem:hover,.map-sritem:active{background:#f0f4ff;}
+.map-sritem-icon{font-size:16px;margin-top:1px;flex-shrink:0;}
+.map-sritem-name{font-size:13px;font-weight:700;color:#111;line-height:1.35;}
+.map-sritem-detail{font-size:11px;color:#888;margin-top:2px;line-height:1.3;}
+.map-search-msg{padding:16px;font-size:13px;color:#888;text-align:center;}
 
 
 /* Leaflet 팝업 */
@@ -380,7 +393,7 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
 
 /* ── Windy 해양상세 패널 ─────────────────────── */
 #map-view{position:relative;}
-#windy-panel{display:none;flex-direction:column;height:calc(100vh - 126px);}
+#windy-panel{display:none;flex-direction:column;height:calc(100vh - 170px);}
 .windy-ctrl{display:flex;gap:6px;padding:8px 12px;background:#0d47a1;
             align-items:center;flex-wrap:wrap;flex-shrink:0;}
 .wov-btn{padding:5px 13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.45);
@@ -482,6 +495,20 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
 .log-item-fish{font-size:12px;color:#2e7d32;margin-bottom:3px;}
 .log-item-memo{font-size:12px;color:#555;line-height:1.5;white-space:pre-wrap;}
 .log-empty{text-align:center;padding:40px 20px;color:#aaa;font-size:14px;}
+.log-search-row{display:flex;gap:8px;margin-bottom:12px;}
+.log-search-input{flex:1;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;font-family:inherit;outline:none;}
+.log-search-input:focus{border-color:#0d47a1;}
+.log-stats-btn{padding:8px 14px;background:#f0f4ff;color:#0d47a1;border:1.5px solid #0d47a1;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.log-stats-panel{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 5px rgba(0,0,0,.07);margin-bottom:12px;}
+.log-stats-section{margin-bottom:12px;}
+.log-stats-section:last-child{margin-bottom:0;}
+.log-stats-section-title{font-size:12px;font-weight:700;color:#555;margin-bottom:6px;}
+.log-stats-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.log-stats-label{font-size:11px;color:#333;width:60px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.log-stats-bar-wrap{flex:1;background:#f0f0f0;border-radius:4px;height:14px;overflow:hidden;}
+.log-stats-bar{height:100%;background:#0d47a1;border-radius:4px;transition:width .4s ease;}
+.log-stats-count{font-size:11px;color:#888;width:24px;text-align:right;}
+.log-item-counts{font-size:12px;color:#0277bd;margin-bottom:3px;}
 
 /* ── 도구 뷰 ─────────────────────────────────── */
 #tool-view{display:none;padding:14px 14px 80px;}
@@ -506,6 +533,27 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
 .cs-item-btns{display:flex;gap:6px;}
 .cs-go-btn{font-size:11px;background:#e8f0fe;color:#1a73e8;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;}
 .cs-del-btn{font-size:11px;color:#e53935;background:none;border:1px solid #e53935;border-radius:6px;padding:4px 8px;cursor:pointer;}
+.cs-edit-btn{font-size:11px;color:#6a1b9a;background:none;border:1px solid #6a1b9a;border-radius:6px;padding:4px 8px;cursor:pointer;}
+.cs-pick-btn{grid-column:1/-1;padding:8px;background:#f3e5f5;color:#6a1b9a;border:1.5px solid #6a1b9a;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:2px;}
+.cs-edit-overlay{display:none;position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.55);align-items:flex-end;}
+.cs-edit-overlay.open{display:flex;}
+.cs-edit-sheet{background:#fff;width:100%;max-height:60vh;border-radius:20px 20px 0 0;padding:20px 20px 28px;overflow-y:auto;animation:slideUp .3s ease;}
+.cs-edit-title{font-size:15px;font-weight:800;color:#6a1b9a;margin-bottom:12px;}
+.cs-edit-grid{display:grid;gap:8px;margin-bottom:12px;}
+.cs-edit-btn-row{display:flex;gap:8px;}
+.cs-edit-save-btn{flex:1;padding:10px;background:#6a1b9a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+.cs-edit-cancel-btn{padding:10px 16px;background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:10px;font-size:13px;cursor:pointer;}
+#spot-pick-banner{display:none;position:fixed;top:46px;left:0;right:0;z-index:901;background:#e65100;color:#fff;text-align:center;padding:10px 16px;font-size:14px;font-weight:700;}
+.spot-pick-cancel{margin-left:12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;padding:4px 12px;border-radius:12px;cursor:pointer;font-size:13px;}
+.best-time-card{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 1px 5px rgba(0,0,0,.07);margin:0 14px 12px;}
+.best-time-title{font-size:13px;font-weight:800;color:#0d47a1;margin-bottom:8px;}
+.best-time-slots{display:flex;flex-wrap:wrap;gap:5px;}
+.best-time-slot{font-size:12px;padding:4px 9px;border-radius:8px;font-weight:700;}
+.best-time-best{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;}
+.best-time-good{background:#f0f4ff;color:#1a73e8;border:1px solid #c5d8ff;}
+.best-time-ok{background:#fffde7;color:#f57f17;border:1px solid #fff9c4;}
+.best-time-none{font-size:12px;color:#aaa;}
+.note-local-warn{font-size:11px;color:#888;margin-top:6px;margin-bottom:2px;}
 
 /* ── PWA 설치 FAB ─────────────────────────────── */
 #install-fab{
@@ -575,16 +623,6 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
 </head>
 <body>
 
-<div class="hero">
-  <h1>🎣 한국 해안 루어낚시 가이드</h1>
-  <p>포항·영덕·울진 포인트 · 전국 해안 실시간 날씨·해양 정보</p>
-  <div class="meta-row">
-    <span class="meta-chip">📍 낚시 19곳</span>
-    <span class="meta-chip">🌐 날씨 33곳</span>
-    <span class="meta-chip">🌡️ 8월 수온 22~24°C</span>
-  </div>
-</div>
-
 <div class="tab-bar">
   <div class="tab active" id="tab-map"  onclick="switchTab('map')">🗺️ 지도·날씨</div>
   <div class="tab"        id="tab-fish" onclick="switchTab('fish')">🎣 낚시</div>
@@ -609,6 +647,19 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
     <button class="fbtn date-sel-btn" id="date-sel-btn" onclick="openCalendar()" title="날씨 조회 날짜 선택 (최대 16일)">📅 오늘</button>
     <button class="wx-refresh" onclick="fetchWeather(true)" style="margin-left:auto">🔄</button>
   </div>
+
+  <!-- ── 지역 검색 바 ── -->
+  <div class="map-search-bar">
+    <input class="map-search-input" id="map-search-input" type="text"
+           placeholder="🔍 지역 검색 후 날씨 확인 (예: 제주 서귀포, 오키나와, 블라디보스톡)"
+           autocomplete="off"
+           oninput="onMapSearchInput(this.value)"
+           onkeydown="if(event.key==='Enter'){event.preventDefault();searchLocation();}">
+    <button class="map-search-clear" id="map-search-clear" onclick="clearMapSearch()" style="display:none">✕</button>
+    <button class="map-search-btn" onclick="searchLocation()">검색</button>
+    <div class="map-search-results" id="map-search-results"></div>
+  </div>
+
   <div id="map"></div>
 
   <!-- ── 해양상세: Windy + 상세 데이터 패널 ── -->
@@ -674,6 +725,11 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
       <span>▲ 만조 <b id="khoa-hi" style="color:#0d47a1">-</b></span>
       <span>▽ 간조 <b id="khoa-lo" style="color:#e65100">-</b></span>
     </div>
+  </div>
+  <!-- 오늘 최적 출조 시간대 -->
+  <div class="best-time-card" id="best-time-card" style="display:none">
+    <div class="best-time-title">⏱ 오늘 최적 출조 시간대</div>
+    <div class="best-time-slots" id="best-time-slots"></div>
   </div>
   <div class="fish-filter-bar">
     <div class="rfl-row">
@@ -819,10 +875,17 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
       <input class="log-input" id="log-spot" type="text" placeholder="포인트명">
       <input class="log-input" id="log-fish" type="text" placeholder="어종 (예: 광어, 농어)">
       <input class="log-input" id="log-weather" type="text" placeholder="날씨 (예: 맑음 파고0.5m)">
+      <input class="log-input" id="log-count" type="number" min="0" max="999" placeholder="마릿수">
+      <input class="log-input" id="log-size" type="text" placeholder="크기 (예: 45cm)">
     </div>
     <textarea class="log-memo-input" id="log-memo" placeholder="메모 (채비, 수온, 특이사항 등)"></textarea>
     <button class="log-save-btn" onclick="addLog()">💾 일지 저장</button>
   </div>
+  <div class="log-search-row">
+    <input class="log-search-input" id="log-search" type="text" placeholder="🔍 포인트·어종 검색..." oninput="renderLogs()">
+    <button class="log-stats-btn" onclick="toggleLogStats()">📊 통계</button>
+  </div>
+  <div class="log-stats-panel" id="log-stats-panel" style="display:none"></div>
   <div class="log-list-wrap" id="log-list"></div>
 </div>
 
@@ -881,6 +944,7 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
       <input class="csi full" id="cs-name" type="text" placeholder="포인트명 *">
       <input class="csi" id="cs-lat" type="number" step="0.001" placeholder="위도 (예: 36.172)">
       <input class="csi" id="cs-lng" type="number" step="0.001" placeholder="경도 (예: 129.387)">
+      <button class="cs-pick-btn" onclick="startSpotPick()">🗺️ 지도에서 선택</button>
       <input class="csi" id="cs-fish" type="text" placeholder="주요 어종">
       <input class="csi" id="cs-memo" type="text" placeholder="메모">
       <button class="cs-add-btn" onclick="addCustomSpot()">➕ 포인트 추가</button>
@@ -900,12 +964,35 @@ footer{text-align:center;padding:14px;font-size:10px;color:var(--sub);border-top
   </div>
 </div>
 
+<!-- ══ 지도 클릭 좌표 선택 배너 ══ -->
+<div id="spot-pick-banner">
+  📍 지도를 탭하여 포인트 좌표를 선택하세요
+  <button class="spot-pick-cancel" onclick="cancelSpotPick()">취소</button>
+</div>
+
+<!-- ══ 포인트 수정 모달 ══ -->
+<div class="cs-edit-overlay" id="cs-edit-modal">
+  <div class="cs-edit-sheet">
+    <div class="cs-edit-title">✏️ 포인트 수정</div>
+    <div class="cs-edit-grid">
+      <input class="csi full" id="cse-name" type="text" placeholder="포인트명 *">
+      <input class="csi full" id="cse-fish" type="text" placeholder="주요 어종">
+      <input class="csi full" id="cse-memo" type="text" placeholder="메모">
+    </div>
+    <div class="cs-edit-btn-row">
+      <button class="cs-edit-save-btn" onclick="saveCustomSpotEdit()">💾 저장</button>
+      <button class="cs-edit-cancel-btn" onclick="closeCustomSpotEdit()">취소</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 포인트 메모 모달 ══ -->
 <div class="note-modal-overlay" id="note-modal">
   <div class="note-sheet">
     <div class="note-title" id="note-modal-title">📝 메모</div>
     <textarea class="note-textarea" id="note-textarea" placeholder="이 포인트에 대한 메모를 입력하세요.
 예) 외항 북쪽 테트라포드 끝 — 만조 전후 30분이 황금타임"></textarea>
+    <div class="note-local-warn">※ 메모는 이 기기에만 저장됩니다</div>
     <div class="note-btn-row">
       <button class="note-save-btn" onclick="saveNote()">💾 저장</button>
       <button class="note-del-btn" onclick="deleteNote()">🗑 삭제</button>
@@ -1394,62 +1481,169 @@ function spotPopup(s){
 }
 
 // ══ 지도 초기화 ═════════════════════════════════════
-let map,spotMarkers=[],alertLayer=null;
+let map,spotMarkers=[],alertLayer=null,customSpotLayer=null;
 function initMap(){
   map=L.map('map').setView([36.2,127.5],7);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
   alertLayer=L.layerGroup().addTo(map);
+  customSpotLayer=L.layerGroup().addTo(map);
   SPOTS.forEach(s=>{
     const m=L.marker([s.lat,s.lng],{icon:makeSpotIcon(s.region,s.star)})
-      .bindPopup(spotPopup(s),{maxWidth:310,minWidth:260}).addTo(map);
+      .bindPopup(spotPopup(s),{maxWidth:310,minWidth:260});
     m.sd=s; spotMarkers.push(m);
   });
 
-  // 지도 클릭 → 해당 지점 날씨 조회
-  map.on('click',async function(e){
+  // 지도 클릭 → 좌표 선택 또는 지점 날씨 조회
+  map.on('click',function(e){
+    if(_spotPickMode){
+      const {lat,lng}=e.latlng;
+      document.getElementById('cs-lat').value=lat.toFixed(4);
+      document.getElementById('cs-lng').value=lng.toFixed(4);
+      _spotPickMode=false;
+      document.getElementById('spot-pick-banner').style.display='none';
+      switchTab('tool');
+      showToast('📍 좌표가 입력됐습니다');
+      return;
+    }
     if(!clickWxMode) return;
-    const {lat,lng}=e.latlng;
-    const popup=L.popup({maxWidth:295,autoPan:true})
-      .setLatLng(e.latlng)
-      .setContent('<div style="padding:10px;font-size:12px">⏳ 날씨·위치 조회 중...</div>')
-      .openOn(map);
-    try{
-      const safeJson=r=>r.ok?r.json():r.json().catch(()=>null).then(j=>({_err:true,reason:(j&&j.reason)||('HTTP '+r.status)}));
-      const [wxR,marineR,geoR]=await Promise.all([
-        fetch('https://api.open-meteo.com/v1/forecast'
-          +'?latitude='+lat.toFixed(4)+'&longitude='+lng.toFixed(4)
-          +'&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,'
-          +'precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure'
-          +'&wind_speed_unit=ms&timezone=Asia%2FSeoul&forecast_days=16')
-          .then(safeJson).catch(()=>null),
-        fetch('https://marine-api.open-meteo.com/v1/marine'
-          +'?latitude='+lat.toFixed(4)+'&longitude='+lng.toFixed(4)
-          +'&current=wave_height,wave_direction,wave_period,'
-          +'swell_wave_height,swell_wave_direction,swell_wave_period'
-          +'&hourly=wave_height,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,sea_surface_temperature'
-          +'&timezone=Asia%2FSeoul&forecast_days=7')
-          .then(safeJson).catch(()=>null),
-        fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat.toFixed(5)
+    showWxAtLocation(e.latlng.lat,e.latlng.lng,null);
+  });
+}
+
+// ══ 날씨 팝업 (지도 클릭·검색 공유) ══════════════
+async function showWxAtLocation(lat,lng,providedName){
+  const safeJson=r=>r.ok?r.json():r.json().catch(()=>null).then(j=>({_err:true,reason:(j&&j.reason)||('HTTP '+r.status)}));
+  const popup=L.popup({maxWidth:295,autoPan:true})
+    .setLatLng([lat,lng])
+    .setContent('<div style="padding:10px;font-size:12px">⏳ 날씨·위치 조회 중...</div>')
+    .openOn(map);
+  try{
+    const geoPromise=providedName
+      ?Promise.resolve(null)
+      :fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat.toFixed(5)
           +'&lon='+lng.toFixed(5)+'&format=json&accept-language=ko&zoom=14')
-          .then(r=>r.ok?r.json():null).catch(()=>null),
-      ]);
-      // 해양 API는 내륙 클릭 시 오류 반환 → null 처리
-      const marine=(marineR&&!marineR.error&&!marineR._err)?marineR:null;
-      const addr=geoR?.address||{};
-      const locName=addr.town||addr.village||addr.suburb||addr.quarter
+          .then(r=>r.ok?r.json():null).catch(()=>null);
+    const [wxR,marineR,geoR]=await Promise.all([
+      fetch('https://api.open-meteo.com/v1/forecast'
+        +'?latitude='+lat.toFixed(4)+'&longitude='+lng.toFixed(4)
+        +'&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,'
+        +'precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure'
+        +'&wind_speed_unit=ms&timezone=Asia%2FSeoul&forecast_days=16')
+        .then(safeJson).catch(()=>null),
+      fetch('https://marine-api.open-meteo.com/v1/marine'
+        +'?latitude='+lat.toFixed(4)+'&longitude='+lng.toFixed(4)
+        +'&current=wave_height,wave_direction,wave_period,'
+        +'swell_wave_height,swell_wave_direction,swell_wave_period'
+        +'&hourly=wave_height,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,sea_surface_temperature'
+        +'&timezone=Asia%2FSeoul&forecast_days=7')
+        .then(safeJson).catch(()=>null),
+      geoPromise,
+    ]);
+    const marine=(marineR&&!marineR.error&&!marineR._err)?marineR:null;
+    let locName=providedName;
+    if(!locName&&geoR){
+      const addr=geoR.address||{};
+      locName=addr.town||addr.village||addr.suburb||addr.quarter
         ||addr.borough||addr.city_district||addr.city||addr.county
         ||(lat.toFixed(3)+'°N '+lng.toFixed(3)+'°E');
-      const sp={name:locName,color:'#546e7a',coast:marine?'해안':'내륙'};
-      popup.setContent(buildWxPopup({sp,wx:wxR,marine,dayOffset:selectedForecastDay}));
-    }catch(err){
-      popup.setContent('<div style="padding:10px;color:#c00">날씨 조회 실패: '+err.message+'</div>');
     }
-  });
+    if(!locName) locName=lat.toFixed(3)+'°N '+lng.toFixed(3)+'°E';
+    const sp={name:locName,color:'#546e7a',coast:marine?'해안':'내륙'};
+    popup.setContent(buildWxPopup({sp,wx:wxR,marine,dayOffset:selectedForecastDay}));
+  }catch(err){
+    popup.setContent('<div style="padding:10px;color:#c00">날씨 조회 실패: '+escHtml(err.message)+'</div>');
+  }
+}
+
+// ══ 지역 검색 ════════════════════════════════════════
+let _searchDebounce=null;
+
+function onMapSearchInput(val){
+  const clearBtn=document.getElementById('map-search-clear');
+  if(clearBtn) clearBtn.style.display=val?'block':'none';
+  clearTimeout(_searchDebounce);
+  if(val.trim().length<2){closeSearchResults();return;}
+  _searchDebounce=setTimeout(searchLocation,600);
+}
+
+function clearMapSearch(){
+  const inp=document.getElementById('map-search-input');
+  const clearBtn=document.getElementById('map-search-clear');
+  if(inp){inp.value='';inp.focus();}
+  if(clearBtn) clearBtn.style.display='none';
+  closeSearchResults();
+}
+
+async function searchLocation(){
+  clearTimeout(_searchDebounce);
+  const inp=document.getElementById('map-search-input');
+  const resultsEl=document.getElementById('map-search-results');
+  if(!inp||!resultsEl) return;
+  const q=inp.value.trim();
+  if(q.length<2) return;
+  resultsEl.innerHTML='<div class="map-search-msg">🔍 검색 중...</div>';
+  resultsEl.classList.add('open');
+  try{
+    const res=await fetch(
+      'https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)
+      +'&format=json&limit=5&accept-language=ko&addressdetails=1',
+      {headers:{'Accept-Language':'ko'}}
+    );
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    if(!data.length){
+      resultsEl.innerHTML='<div class="map-search-msg">검색 결과가 없습니다.<br><span style="font-size:11px">다른 검색어를 시도해 보세요</span></div>';
+      return;
+    }
+    const typeIcon=t=>({
+      city:'🏙️',town:'🏘️',village:'🏡',administrative:'📍',
+      water:'🌊',bay:'🌊',harbour:'⚓',island:'🏝️',
+      beach:'🏖️',coast:'🌊',river:'🏞️',suburb:'🏙️',county:'📍'
+    }[t]||'📍');
+    resultsEl.innerHTML=data.map(item=>{
+      const parts=item.display_name.split(',');
+      const name=parts[0].trim();
+      const detail=parts.slice(1,4).join(',').trim();
+      return `<div class="map-sritem"
+        data-lat="${item.lat}" data-lng="${item.lon}" data-name="${escHtml(name)}"
+        onclick="selectSearchResult(this)">
+        <span class="map-sritem-icon">${typeIcon(item.type)}</span>
+        <div>
+          <div class="map-sritem-name">${escHtml(name)}</div>
+          ${detail?`<div class="map-sritem-detail">${escHtml(detail)}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    resultsEl.innerHTML='<div class="map-search-msg">검색 실패. 잠시 후 다시 시도해주세요.</div>';
+  }
+}
+
+function closeSearchResults(){
+  const el=document.getElementById('map-search-results');
+  if(el) el.classList.remove('open');
+}
+
+function selectSearchResult(el){
+  closeSearchResults();
+  const lat=parseFloat(el.dataset.lat);
+  const lng=parseFloat(el.dataset.lng);
+  const name=el.dataset.name;
+  const inp=document.getElementById('map-search-input');
+  if(inp) inp.value=name;
+  map.flyTo([lat,lng],11,{duration:.8});
+  setTimeout(()=>showWxAtLocation(lat,lng,name),900);
 }
 
 // ══ 지도 필터 ════════════════════════════════════════
 function filterAll(btn){
+  if(btn.classList.contains('on')){
+    // 이미 활성 → 전체 숨기기
+    btn.classList.remove('on');
+    spotMarkers.forEach(m=>{if(map.hasLayer(m))map.removeLayer(m);});
+    return;
+  }
   document.querySelectorAll('.map-controls .fbtn').forEach(b=>{
     b.classList.remove('on');
     b.style.background='';
@@ -1651,11 +1845,12 @@ function safetyAll(wind,waveH,rainCode,precip,sst,pressureDrop6h){
   let sstScore=0, sstLabel='';
   if(sst!=null){
     const sv=sst.toFixed(1)+'°C';
-    if(sst<10||sst>28){ sstScore=-30; sstLabel='수온 '+sv+' — 어류 비활성 구간'; }
-    else if(sst<15)    { sstScore=-15; sstLabel='수온 '+sv+' — 저수온 (활성 저하)'; }
-    else if(sst>25)    { sstScore=-10; sstLabel='수온 '+sv+' — 고수온 주의'; }
+    if(sst>28)        { sstScore=-50; sstLabel='수온 '+sv+' — 고수온 경보 (적조위험)'; }
+    else if(sst>25)   { sstScore=-20; sstLabel='수온 '+sv+' — 고수온 주의 (어류 심해 이동)'; }
+    else if(sst<8)    { sstScore=-50; sstLabel='수온 '+sv+' — 저수온 경보 (어류 활성 중단)'; }
+    else if(sst<15)   { sstScore=-15; sstLabel='수온 '+sv+' — 저수온 (활성 저하)'; }
     else if(sst>=18&&sst<=24){ sstScore=10; sstLabel='수온 '+sv+' — 루어 최적 구간'; }
-    else               { sstScore=2;  sstLabel='수온 '+sv; }
+    else              { sstScore=2;  sstLabel='수온 '+sv; }
   }
 
   // ── 5단계: 기압 추이 ─────────────────────
@@ -1956,6 +2151,7 @@ function buildWxCard(spot,atmo,marine,dayOffset){
 
 // ── 날씨 마커 상태 ───────────────────────────
 let wxDataCache=null, marineDetailOn=false, clickWxMode=false;
+let _spotPickMode=false, _lastWxMs=0, _csEditId=null, _logStatsOn=false;
 let selectedForecastDay=0;
 let calYear=0,calMonth=0;
 let curFishSpecies='all';
@@ -2194,7 +2390,7 @@ function buildWxPopup(d){
       +(mulTxt?'<div style="font-size:10px;color:#777;text-align:center;margin-top:4px">'+mulTxt+'</div>':'')
       +'</div>';
   }catch(e){
-    return '<b>'+(d.sp?.name||'?')+'</b><br><span style="color:#c00">팝업 오류: '+e.message+'</span>';
+    return '<b>'+escHtml(d.sp?.name||'?')+'</b><br><span style="color:#c00">팝업 오류: '+escHtml(e.message)+'</span>';
   }
 }
 
@@ -2330,6 +2526,7 @@ async function fetchWeatherOpenMeteo(){
   }));
   wxDataCache=results;
   if(marineDetailOn)renderMarineDetail();
+  renderBestFishingHours();
 }
 
 // 날씨·해양 데이터 fetch — KMA 우선, 실패 시 Open-Meteo 폴백
@@ -2370,6 +2567,8 @@ async function fetchWeather(force){
         wxDataCache=results;
         saveWxCache(results);
         if(marineDetailOn)renderMarineDetail();
+        renderBestFishingHours();
+        if(wxBtn)wxBtn.textContent='날씨';
         return;
       }
       // KMA 0개 성공 → CORS 차단 등 → 폴백
@@ -2384,7 +2583,8 @@ async function fetchWeather(force){
   try{
     await fetchWeatherOpenMeteo();
     // 성공 시 캐시 저장
-    if(wxDataCache) saveWxCache(wxDataCache);
+    if(wxDataCache){saveWxCache(wxDataCache);renderBestFishingHours();}
+    if(wxBtn)wxBtn.textContent='날씨';
   }catch(e){
     if(wxBtn)wxBtn.textContent='⚠️ 오프라인';
     console.warn('날씨 전체 실패 — 캐시 시도:',e);
@@ -2393,6 +2593,7 @@ async function fetchWeather(force){
     if(cached){
       wxDataCache=cached;
       if(marineDetailOn)renderMarineDetail();
+      renderBestFishingHours();
       showToast('📡 오프라인 — 최근 저장된 날씨 데이터 표시 중');
     }
   }
@@ -2403,6 +2604,7 @@ function goMap(idx){
   switchTab('map');
   setTimeout(()=>{
     const m=spotMarkers[idx];
+    if(!map.hasLayer(m)) map.addLayer(m);
     map.flyTo([m.sd.lat,m.sd.lng],14,{duration:.8});
     setTimeout(()=>m.openPopup(),900);
   },200);
@@ -2855,12 +3057,24 @@ async function addLog(){
   const fish=document.getElementById('log-fish').value.trim();
   const weather=document.getElementById('log-weather').value.trim();
   const memo=document.getElementById('log-memo').value.trim();
+  const countRaw=document.getElementById('log-count').value;
+  const size=document.getElementById('log-size').value.trim();
+  const count=countRaw!==''?parseInt(countRaw):null;
   if(!date||!spot){showToast('날짜와 포인트명은 필수입니다');return;}
+  if(spot.length>50){showToast('포인트명은 50자 이하로 입력하세요');return;}
+  if(fish.length>50){showToast('어종은 50자 이하로 입력하세요');return;}
+  if(weather.length>50){showToast('날씨는 50자 이하로 입력하세요');return;}
+  if(memo.length>200){showToast('메모는 200자 이하로 입력하세요');return;}
+  if(size.length>20){showToast('크기는 20자 이하로 입력하세요');return;}
+  if(count!==null&&(count<0||count>999)){showToast('마릿수는 0~999 사이로 입력하세요');return;}
   if(!window._fbAddLog){showToast('서버 연결 중입니다. 잠시 후 다시 시도하세요');return;}
+  const data={date,spot,fish,weather,memo,ts:Date.now()};
+  if(count!==null) data.count=count;
+  if(size) data.size=size;
   try{
-    await window._fbAddLog({date,spot,fish,weather,memo,ts:Date.now()});
+    await window._fbAddLog(data);
     document.getElementById('log-date').value=new Date().toISOString().slice(0,10);
-    ['log-spot','log-fish','log-weather','log-memo'].forEach(id=>{document.getElementById(id).value='';});
+    ['log-spot','log-fish','log-weather','log-count','log-size','log-memo'].forEach(id=>{document.getElementById(id).value='';});
     showToast('📓 일지가 저장됐습니다');
   }catch(e){showToast('저장 실패: 잠시 후 다시 시도하세요');}
 }
@@ -2876,7 +3090,10 @@ function renderLogs(){
   const logs=window._sharedLogs;
   if(!logs){wrap.innerHTML='<div class="log-empty">⏳ 서버 연결 중...</div>';return;}
   if(!logs.length){wrap.innerHTML='<div class="log-empty">📓 아직 출조 일지가 없습니다.<br>첫 번째 출조를 기록해보세요!</div>';return;}
-  wrap.innerHTML=logs.map(l=>`
+  const q=(document.getElementById('log-search')?.value||'').trim().toLowerCase();
+  const filtered=q?logs.filter(l=>(l.spot||'').toLowerCase().includes(q)||(l.fish||'').toLowerCase().includes(q)):logs;
+  if(!filtered.length){wrap.innerHTML='<div class="log-empty">검색 결과가 없습니다</div>';return;}
+  wrap.innerHTML=filtered.map(l=>`
     <div class="log-item">
       <div class="log-item-header">
         <span class="log-item-date">${escHtml(l.date)}</span>
@@ -2885,8 +3102,47 @@ function renderLogs(){
       </div>
       <div class="log-item-spot">📍 ${escHtml(l.spot)}</div>
       ${l.fish?`<div class="log-item-fish">🐟 ${escHtml(l.fish)}</div>`:''}
+      ${(l.count!=null||l.size)?`<div class="log-item-counts">${l.count!=null?'📦 '+l.count+'마리':''}${l.count!=null&&l.size?' · ':''}${l.size?'📏 '+escHtml(l.size):''}</div>`:''}
       ${l.memo?`<div class="log-item-memo">${escHtml(l.memo)}</div>`:''}
     </div>`).join('');
+}
+function toggleLogStats(){
+  _logStatsOn=!_logStatsOn;
+  const p=document.getElementById('log-stats-panel');
+  if(!p) return;
+  if(_logStatsOn){p.style.display='block';renderLogStats();}
+  else p.style.display='none';
+}
+function renderLogStats(){
+  const p=document.getElementById('log-stats-panel');
+  if(!p) return;
+  const logs=window._sharedLogs;
+  if(!logs||!logs.length){p.innerHTML='<div style="font-size:12px;color:#aaa;text-align:center;padding:10px">아직 데이터가 없습니다</div>';return;}
+  // 어종별 집계
+  const fishMap={};
+  logs.forEach(l=>{
+    if(!l.fish) return;
+    l.fish.split(/[,，、\s]+/).map(f=>f.trim()).filter(Boolean).forEach(f=>{
+      fishMap[f]=(fishMap[f]||0)+1;
+    });
+  });
+  const fishArr=Object.entries(fishMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxF=fishArr[0]?fishArr[0][1]:1;
+  // 월별 집계
+  const monthMap={};
+  logs.forEach(l=>{if(l.date&&l.date.length>=7){const m=l.date.slice(5,7)+'월';monthMap[m]=(monthMap[m]||0)+1;}});
+  const monthArr=Object.entries(monthMap).sort((a,b)=>a[0].localeCompare(b[0]));
+  const maxM=monthArr[0]?Math.max(...monthArr.map(e=>e[1])):1;
+  const barHtml=(arr,max)=>arr.map(([k,v])=>`
+    <div class="log-stats-row">
+      <span class="log-stats-label">${escHtml(k)}</span>
+      <div class="log-stats-bar-wrap"><div class="log-stats-bar" style="width:${Math.round(v/max*100)}%"></div></div>
+      <span class="log-stats-count">${v}</span>
+    </div>`).join('');
+  p.innerHTML=`
+    ${fishArr.length?`<div class="log-stats-section"><div class="log-stats-section-title">어종별 출조</div>${barHtml(fishArr,maxF)}</div>`:''}
+    ${monthArr.length?`<div class="log-stats-section"><div class="log-stats-section-title">월별 출조 횟수</div>${barHtml(monthArr,maxM)}</div>`:''}
+    <div style="font-size:11px;color:#aaa;margin-top:4px">총 ${logs.length}건 · 총 ${logs.reduce((s,l)=>s+(l.count||0),0)}마리</div>`;
 }
 
 // ══ 채비 계산기 ══════════════════════════════════
@@ -2963,8 +3219,11 @@ async function addCustomSpot(){
   const fish=document.getElementById('cs-fish').value.trim();
   const memo=document.getElementById('cs-memo').value.trim();
   if(!name){showToast('포인트명을 입력하세요');return;}
+  if(name.length>30){showToast('포인트명은 30자 이하로 입력하세요');return;}
+  if(fish.length>30){showToast('어종은 30자 이하로 입력하세요');return;}
+  if(memo.length>100){showToast('메모는 100자 이하로 입력하세요');return;}
   if(isNaN(lat)||isNaN(lng)){showToast('위도·경도를 입력하세요');return;}
-  if(lat<34||lat>39||lng<128||lng>131){showToast('동해안 좌표 범위를 벗어났습니다');return;}
+  if(lat<33||lat>38.7||lng<124||lng>132){showToast('한국 해안 좌표 범위를 벗어났습니다');return;}
   if(!window._fbAddSpot){showToast('서버 연결 중입니다. 잠시 후 다시 시도하세요');return;}
   try{
     await window._fbAddSpot({name,lat,lng,fish,memo,ts:Date.now()});
@@ -2986,7 +3245,18 @@ function renderCustomSpots(){
   const wrap=document.getElementById('cs-list');
   if(!wrap) return;
   const spots=window._sharedSpots;
+  // 지도 마커 갱신
+  if(customSpotLayer) customSpotLayer.clearLayers();
   if(!spots){wrap.innerHTML='<div style="font-size:12px;color:#888;text-align:center;padding:16px">⏳ 서버 연결 중...</div>';return;}
+  if(spots.length&&map&&customSpotLayer){
+    spots.forEach(s=>{
+      const la=Number(s.lat),ln=Number(s.lng);
+      if(!isFinite(la)||!isFinite(ln)) return;
+      L.circleMarker([la,ln],{radius:9,color:'#6a1b9a',fillColor:'#ce93d8',fillOpacity:.85,weight:2})
+        .bindPopup(`<b>📍 ${escHtml(s.name)}</b>${s.fish?'<br>🐟 '+escHtml(s.fish):''}${s.memo?'<br><span style="color:#555">'+escHtml(s.memo)+'</span>':''}`)
+        .addTo(customSpotLayer);
+    });
+  }
   if(!spots.length){wrap.innerHTML='<div style="font-size:12px;color:#aaa;text-align:center;padding:16px">추가된 포인트가 없습니다</div>';return;}
   wrap.innerHTML=spots.map(s=>`
     <div class="cs-item">
@@ -2996,12 +3266,126 @@ function renderCustomSpots(){
       </div>
       <div class="cs-item-btns">
         <button class="cs-go-btn" onclick="goCustomSpot(${Number(s.lat)},${Number(s.lng)})">지도</button>
+        <button class="cs-edit-btn" onclick="editCustomSpot('${escHtml(s.id)}')">수정</button>
         <button class="cs-del-btn" onclick="deleteCustomSpot('${escHtml(s.id)}')">삭제</button>
       </div>
     </div>`).join('');
 }
 
+// ══ 포인트 수정 ══════════════════════════════════
+function editCustomSpot(id){
+  const s=window._sharedSpots&&window._sharedSpots.find(x=>x.id===id);
+  if(!s){showToast('포인트를 찾을 수 없습니다');return;}
+  _csEditId=id;
+  document.getElementById('cse-name').value=s.name||'';
+  document.getElementById('cse-fish').value=s.fish||'';
+  document.getElementById('cse-memo').value=s.memo||'';
+  const el=document.getElementById('cs-edit-modal');
+  if(el){el.style.display='flex';}
+}
+function closeCustomSpotEdit(){
+  _csEditId=null;
+  const el=document.getElementById('cs-edit-modal');
+  if(el) el.style.display='none';
+}
+async function saveCustomSpotEdit(){
+  if(!await checkAccess()) return;
+  if(!_csEditId){showToast('수정할 포인트가 없습니다');return;}
+  const name=document.getElementById('cse-name').value.trim();
+  const fish=document.getElementById('cse-fish').value.trim();
+  const memo=document.getElementById('cse-memo').value.trim();
+  if(!name){showToast('포인트명은 필수입니다');return;}
+  if(name.length>50){showToast('포인트명은 50자 이하로 입력하세요');return;}
+  if(fish.length>30){showToast('어종은 30자 이하로 입력하세요');return;}
+  if(memo.length>100){showToast('메모는 100자 이하로 입력하세요');return;}
+  if(!window._fbUpdateSpot){showToast('서버 연결 중입니다. 잠시 후 다시 시도하세요');return;}
+  try{
+    await window._fbUpdateSpot(_csEditId,{name,fish,memo});
+    showToast('✅ 포인트가 수정됐습니다');
+    closeCustomSpotEdit();
+  }catch(e){showToast('수정 실패: 잠시 후 다시 시도하세요');}
+}
+// 모달 바깥 탭 시 닫기
+document.getElementById('cs-edit-modal').addEventListener('click',function(e){
+  if(e.target===this) closeCustomSpotEdit();
+});
+
+// ══ 지도 클릭 좌표 선택 ══════════════════════════
+function startSpotPick(){
+  _spotPickMode=true;
+  switchTab('map');
+  document.getElementById('spot-pick-banner').style.display='block';
+  showToast('지도를 탭하여 좌표를 선택하세요');
+}
+function cancelSpotPick(){
+  _spotPickMode=false;
+  document.getElementById('spot-pick-banner').style.display='none';
+}
+
+// ══ 오늘 최적 출조 시간대 ════════════════════════
+function renderBestFishingHours(){
+  const card=document.getElementById('best-time-card');
+  const slotsEl=document.getElementById('best-time-slots');
+  if(!card||!slotsEl) return;
+  if(!wxDataCache||!wxDataCache.length){card.style.display='none';return;}
+  // 첫 번째 날씨 지점 데이터 사용
+  const entry=wxDataCache.find(e=>e.wx&&e.wx.hourly)||wxDataCache[0];
+  if(!entry||!entry.wx||!entry.wx.hourly){card.style.display='none';return;}
+  const wx=entry.wx.hourly;
+  const marine=entry.marine&&entry.marine.hourly;
+  // 오늘 날짜의 시간 인덱스 구하기
+  const now=new Date();
+  const todayStr=now.getFullYear()+'-'
+    +String(now.getMonth()+1).padStart(2,'0')+'-'
+    +String(now.getDate()).padStart(2,'0');
+  const times=wx.time||[];
+  let startIdx=-1;
+  for(let i=0;i<times.length;i++){
+    if(times[i]&&times[i].startsWith(todayStr)){startIdx=i;break;}
+  }
+  if(startIdx<0){
+    // time 배열 없으면 0~23이 오늘
+    startIdx=0;
+  }
+  const slots=[];
+  for(let h=0;h<24;h++){
+    const idx=startIdx+h;
+    if(idx>=(wx.wind_speed_10m||[]).length) break;
+    const wind=wx.wind_speed_10m[idx]||0;
+    const rainCode=wx.weather_code?wx.weather_code[idx]:0;
+    const precip=wx.precipitation?wx.precipitation[idx]:0;
+    const pressure=wx.surface_pressure?wx.surface_pressure[idx]:null;
+    const press6=pressure&&idx>=6?Math.max(0,wx.surface_pressure[idx-6]-pressure):0;
+    const waveH=marine&&marine.wave_height?marine.wave_height[idx]||0:0;
+    const sst=marine&&marine.sea_surface_temperature?marine.sea_surface_temperature[idx]||null:null;
+    const result=safetyAll(wind,waveH,rainCode,precip,sst,press6);
+    slots.push({h,cls:result.cls,grade:result.grade});
+  }
+  const good=slots.filter(s=>s.cls==='best'||s.cls==='good'||s.cls==='ok');
+  if(!good.length){
+    card.style.display='block';
+    slotsEl.innerHTML='<span class="best-time-none">오늘 적합한 출조 시간대 없음</span>';
+    return;
+  }
+  // 연속 구간 병합
+  const windows=[];
+  let cur=null;
+  good.forEach(s=>{
+    if(!cur||s.h!==cur.endH+1||s.cls!==cur.cls){
+      cur={startH:s.h,endH:s.h,cls:s.cls,grade:s.grade};windows.push(cur);
+    }else{cur.endH=s.h;}
+  });
+  const clsMap={best:'best-time-best',good:'best-time-good',ok:'best-time-ok'};
+  slotsEl.innerHTML=windows.map(w=>`
+    <span class="best-time-slot ${clsMap[w.cls]||'best-time-ok'}">
+      ${w.startH===w.endH?String(w.startH).padStart(2,'0')+':00':String(w.startH).padStart(2,'0')+'~'+String(w.endH+1).padStart(2,'0')+'시'}
+      ${w.grade}
+    </span>`).join('');
+  card.style.display='block';
+}
+
 // ══ 접속 코드 시스템 ══════════════════════════════
+let _codeAttempts=0,_codeLockUntil=0;
 async function checkAccess(){
   if(localStorage.getItem('fishing_access_ok')==='1') return true;
   showCodeModal();
@@ -3015,6 +3399,11 @@ function closeCodeModal(){
   document.getElementById('code-modal').style.display='none';
 }
 async function submitAccessCode(){
+  if(Date.now()<_codeLockUntil){
+    const sec=Math.ceil((_codeLockUntil-Date.now())/1000);
+    showToast('⏳ '+sec+'초 후에 다시 시도하세요');
+    return;
+  }
   const input=document.getElementById('code-input').value.trim();
   if(!input){showToast('코드를 입력하세요');return;}
   if(!window._fbGetCode){showToast('서버 연결 중입니다. 잠시 후 다시 시도하세요');return;}
@@ -3029,11 +3418,19 @@ async function submitAccessCode(){
         showToast('✅ 접속 코드가 설정됐습니다');
       }
     }else if(input===stored){
+      _codeAttempts=0;
       localStorage.setItem('fishing_access_ok','1');
       closeCodeModal();
       showToast('✅ 인증됐습니다');
     }else{
-      showToast('❌ 코드가 올바르지 않습니다');
+      _codeAttempts++;
+      if(_codeAttempts>=5){
+        _codeLockUntil=Date.now()+30000;
+        _codeAttempts=0;
+        showToast('⚠️ 5회 실패 — 30초 후 재시도 가능');
+      }else{
+        showToast('❌ 코드가 올바르지 않습니다 ('+_codeAttempts+'/5)');
+      }
       document.getElementById('code-input').value='';
       document.getElementById('code-input').focus();
     }
@@ -3082,6 +3479,8 @@ function loadWxCache(){
 window.addEventListener('DOMContentLoaded',()=>{
   initMap(); renderFishCards(); initFilterColors(); initFishFilterColors();
   markBannedSpecies(); updateTideWidget();
+  // Worker URL 미설정 시 알림 배지 숨김
+  if(!WORKER_URL){const ab=document.getElementById('alert-badge');if(ab)ab.style.display='none';}
   // URL로 특정 포인트 공유됐을 때 자동 이동
   const urlSpotId=new URLSearchParams(location.search).get('spot');
   if(urlSpotId!==null){
@@ -3094,7 +3493,16 @@ window.addEventListener('DOMContentLoaded',()=>{
   if(di){const now=new Date();di.value=now.toISOString().slice(0,10);}
   fetchWeather(false);
   wxFetched=true;
+  _lastWxMs=Date.now();
   fetchAlerts();
+  // 날씨 30분 자동 갱신
+  setInterval(()=>{if(Date.now()-_lastWxMs>=30*60*1000){fetchWeather(false);_lastWxMs=Date.now();}},60000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-_lastWxMs>=30*60*1000){fetchWeather(false);_lastWxMs=Date.now();}});
+  // 검색 결과 외부 클릭 시 닫기
+  document.addEventListener('click',e=>{
+    const bar=document.querySelector('.map-search-bar');
+    if(bar&&!bar.contains(e.target)) closeSearchResults();
+  });
 });
 
 // ══ PWA / 홈 화면 추가 ═════════════════════════════════════════
@@ -3201,18 +3609,22 @@ window.addEventListener('DOMContentLoaded',()=>{
   const appleLink=document.getElementById('pwa-apple-icon');
   if(appleLink) appleLink.href=icon256;
 
-  // 3) Service Worker (캐시 오프라인 지원) — HTTP/HTTPS 환경에서만
+  // 3) Service Worker — sw.js 파일 등록 (HTTP/HTTPS 환경에서만)
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    const swCode=`
-const CACHE='fishing-v1';
-const PRE=[self.location.href.replace(/\\/sw\\.js/,''),'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js','https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(PRE).catch(()=>{})));self.skipWaiting();});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});
-self.addEventListener('fetch',e=>{if(!e.request.url.startsWith('http'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{if(res&&res.status===200){const c=res.clone();caches.open(CACHE).then(ca=>ca.put(e.request,c));}return res;}).catch(()=>caches.match(e.request))));});
-    `.trim();
-    const swBlob=new Blob([swCode],{type:'application/javascript'});
-    const swURL=URL.createObjectURL(swBlob);
-    navigator.serviceWorker.register(swURL,{scope:'./'}).catch(()=>{});
+    navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(reg=>{
+      reg.addEventListener('updatefound',()=>{
+        const w=reg.installing;
+        if(!w) return;
+        w.addEventListener('statechange',()=>{
+          if(w.state==='installed'&&navigator.serviceWorker.controller){
+            showToast('🔄 앱 업데이트 완료! 새로고침하면 적용됩니다.');
+          }
+        });
+      });
+    }).catch(()=>{});
+    navigator.serviceWorker.addEventListener('message',e=>{
+      if(e.data&&e.data.type==='SW_UPDATED') showToast('🔄 앱이 최신 버전으로 업데이트됐습니다.');
+    });
   }
 
   // 4) FAB 표시 로직
@@ -3264,7 +3676,7 @@ document.getElementById('install-guide').addEventListener('click',function(e){
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js';
 import{getAuth,signInAnonymously,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js';
-import{getFirestore,collection,addDoc,deleteDoc,doc,onSnapshot,query,orderBy,getDoc,setDoc}from'https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js';
+import{getFirestore,collection,addDoc,deleteDoc,doc,onSnapshot,query,orderBy,getDoc,setDoc,updateDoc}from'https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js';
 
 const firebaseConfig={
   apiKey:'AIzaSyD7N4RNCzjUhtsO8rUx08AWO6p3JbchUKU',
@@ -3317,6 +3729,8 @@ window._fbGetCode=async()=>{
 };
 // 접속 코드 저장
 window._fbSetCode=async code=>setDoc(doc(db,'config','settings'),{accessCode:code},{merge:true});
+// 포인트 수정
+window._fbUpdateSpot=async(id,data)=>updateDoc(doc(db,'spots',id),data);
 </script>
 </body>
 </html>
